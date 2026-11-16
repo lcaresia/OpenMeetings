@@ -13,6 +13,9 @@ export const INTENTS = [
   "leave",
   "agent",
   "none",
+  // Answers to a pending confirmation. Only ever produced by literal chat words.
+  "approve",
+  "deny",
 ] as const;
 export type Intent = (typeof INTENTS)[number];
 
@@ -87,7 +90,15 @@ const EXACT_CHAT: Record<string, Intent> = {
   continuar: "resume",
   retomar: "resume",
   resume: "resume",
-  ok: "resume",
+  sim: "approve",
+  yes: "approve",
+  confirmar: "approve",
+  confirmo: "approve",
+  ok: "approve",
+  nao: "deny",
+  no: "deny",
+  cancelar: "deny",
+  cancel: "deny",
 };
 
 /**
@@ -126,7 +137,11 @@ export function quickIntent(request: string): Intent | undefined {
   return QUICK.find(([pattern]) => pattern.test(text))?.[1];
 }
 
-const intentSchema = z.object({ intent: z.enum(INTENTS), request: z.string().default("") });
+const intentSchema = z.object({
+  // A model may not approve or deny an action on someone's behalf.
+  intent: z.enum(INTENTS).exclude(["approve", "deny"]),
+  request: z.string().default(""),
+});
 
 export type IntentOptions = {
   agentName: string;

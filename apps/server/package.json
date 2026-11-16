@@ -21,6 +21,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^1.9.0",
     "pino": "^10.0.0",
+    "ws": "^8.23.0",
     "yaml": "^2.8.0",
     "zod": "^4.6.0"
   },
@@ -28,6 +29,7 @@
     "@open-meetings/config": "workspace:*",
     "@open-meetings/core": "workspace:*",
     "@open-meetings/engines": "workspace:*",
+    "@types/ws": "^8.18.2",
     "tsup": "^8.5.0"
   }
 }

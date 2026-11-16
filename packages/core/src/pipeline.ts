@@ -111,6 +111,11 @@ export class MeetingPipeline {
     this.chain = this.chain.then(() => this.updateState(window));
   }
 
+  /** Applies a system-authored change to the state (artifacts, participants) and emits the diff. */
+  mutate(change: (draft: MeetingState) => void): void {
+    this.commit(updateState(this.state, change));
+  }
+
   /** Resolves when no update is in flight. */
   idle(): Promise<void> {
     return this.chain;
