@@ -1,3 +1,4 @@
+import { quickIntent } from "../commands";
 import type { ChatDelta, ChatRequest, LlmEngine } from "../llm";
 
 type Line = { id: string; speaker: string; text: string };
@@ -72,6 +73,13 @@ function stateUpdate(req: ChatRequest): string {
   return JSON.stringify({ patch: ops });
 }
 
+/** Routes a request by keyword; anything unrecognized goes to the agent. */
+function intent(req: ChatRequest): string {
+  const user = req.messages.findLast((message) => message.role === "user")?.content ?? "";
+  const request = user.split("\nSaid: ")[1] ?? "";
+  return JSON.stringify({ intent: quickIntent(request) ?? "agent", request });
+}
+
 /**
  * A deterministic stand-in for a language model, for CI. It answers each kind of call
  * (`ChatRequest.purpose`) with fixed rules, so the whole pipeline runs with no network, no
@@ -81,7 +89,7 @@ export function createRuleLlm(
   responders: Record<string, Responder> = {},
 ): LlmEngine & { calls: ChatRequest[] } {
   const calls: ChatRequest[] = [];
-  const builtin: Record<string, Responder> = { "state-update": stateUpdate };
+  const builtin: Record<string, Responder> = { "state-update": stateUpdate, intent };
 
   return {
     provider: "rule",
