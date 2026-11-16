@@ -24,3 +24,5 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Replay a recorded meeting with the built CLI
+        run: node apps/server/dist/main.js replay weekly-sync --mock
