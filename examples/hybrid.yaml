@@ -1,0 +1,30 @@
+# Profile: hybrid. Audio and the continuous loop stay on your machine; only the text of a
+# command (and the final minutes) goes to a hosted smart model.
+profile: hybrid
+
+engines:
+  llm:
+    fast:
+      provider: openai-compatible
+      baseUrl: "${OLLAMA_URL:-http://localhost:11434/v1}"
+      model: "qwen2.5:7b"
+    smart:
+      provider: anthropic
+      model: claude-sonnet-5-5
+      apiKey: "${ANTHROPIC_API_KEY}"
+  stt:
+    provider: openai-compatible
+    baseUrl: "${STT_URL:-http://localhost:8000/v1}"
+    model: Systran/faster-whisper-small
+  tts:
+    provider: none
+  embed:
+    provider: openai-compatible
+    baseUrl: "${OLLAMA_URL:-http://localhost:11434/v1}"
+    model: nomic-embed-text
+
+pricing:
+  claude-sonnet-5-5: { in: 2.00, out: 10.00 }
+
+agent:
+  language: pt-BR
