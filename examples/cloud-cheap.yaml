@@ -1,0 +1,49 @@
+# Profile: cloud-cheap. Meet captions for the transcript (free), a small hosted model for the
+# continuous loop, a cheap capable model for commands and the final minutes.
+# Target: under US$ 0.05 per meeting hour. Check yours with `om doctor`.
+profile: cloud-cheap
+
+engines:
+  llm:
+    fast:
+      provider: openai-compatible
+      baseUrl: https://api.groq.com/openai/v1
+      model: llama-3.1-8b-instant
+      apiKey: "${GROQ_API_KEY}"
+    smart:
+      provider: anthropic
+      model: claude-haiku-5-5
+      apiKey: "${ANTHROPIC_API_KEY}"
+  stt:
+    provider: none # uses Meet captions
+  tts:
+    provider: none
+  embed:
+    provider: none # set an embeddings endpoint to enable semantic search
+
+# USD per 1M tokens, for the cost meter
+pricing:
+  llama-3.1-8b-instant: { in: 0.05, out: 0.08 }
+  claude-haiku-5-5: { in: 0.10, out: 0.50 }
+
+agent:
+  name: Open Meetings
+  wakeWords: ["open meetings", "ei open", "hey open"]
+  language: pt-BR
+  proactive: false # true = suggests things without being called
+  summaryIntervalSec: 45
+
+consent:
+  announceOnJoin: true
+  joinMessage: "Olá, sou o Open Meetings, assistente de IA. Estou transcrevendo esta reunião. Digite 'om sair' para eu sair."
+  externalGuests: allow # allow | ask | leave
+  internalDomains: []
+  retentionDays: 90
+
+storage:
+  driver: sqlite # sqlite | postgres
+  path: ./data/openmeetings.db
+
+outputs:
+  postSummaryTo: [chat]
+  webhookUrl: "${OM_WEBHOOK_URL}"

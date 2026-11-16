@@ -1,0 +1,33 @@
+{
+  "name": "open-meetings",
+  "version": "0.1.0",
+  "description": "Open source AI meeting agent: joins the call, transcribes, tracks decisions and action items, works with any LLM, local or hosted.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "om": "./dist/main.js",
+    "open-meetings": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/cli/main.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.9.0",
+    "pino": "^10.0.0",
+    "yaml": "^2.8.0",
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "@open-meetings/config": "workspace:*",
+    "@open-meetings/core": "workspace:*",
+    "@open-meetings/engines": "workspace:*",
+    "tsup": "^8.5.0"
+  }
+}

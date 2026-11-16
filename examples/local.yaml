@@ -1,0 +1,33 @@
+# Profile: local. Nothing leaves the machine: Ollama for the LLMs and embeddings, a local
+# Whisper server for speech. `profile: local` also blocks any outbound request at runtime.
+# Cost: US$ 0.00. Needs a consumer GPU (8 GB+ VRAM) for comfortable latency.
+profile: local
+
+engines:
+  llm:
+    fast:
+      provider: openai-compatible
+      baseUrl: "${OLLAMA_URL:-http://localhost:11434/v1}"
+      model: "qwen2.5:7b"
+    smart:
+      provider: openai-compatible
+      baseUrl: "${OLLAMA_URL:-http://localhost:11434/v1}"
+      model: "qwen2.5:14b"
+  # Meet captions are still the default transcript source. STT is used by the browser
+  # extension, by file uploads, and when captions are unavailable.
+  stt:
+    provider: openai-compatible
+    baseUrl: "${STT_URL:-http://localhost:8000/v1}"
+    model: Systran/faster-whisper-small
+  tts:
+    provider: none
+  embed:
+    provider: openai-compatible
+    baseUrl: "${OLLAMA_URL:-http://localhost:11434/v1}"
+    model: nomic-embed-text
+
+agent:
+  language: pt-BR
+
+tools:
+  webFetch: false
