@@ -18,6 +18,10 @@ const MESSAGES = {
     notAllowed: "Só alguém da organização pode retomar a transcrição.",
     agentUnavailable: "Ainda não consigo fazer isso por aqui.",
     failed: "Não consegui concluir esse pedido.",
+    confirmPrefix: "Preciso de confirmação para:",
+    confirmHow: "Responda 'om sim' para confirmar ou 'om não' para cancelar.",
+    denied: "Ação cancelada: não houve confirmação.",
+    fullAnswerInPanel: "(resposta completa no painel)",
   },
   en: {
     decisionsHeader: "Decisions so far:",
@@ -38,6 +42,10 @@ const MESSAGES = {
     notAllowed: "Only someone from the organization can resume the transcription.",
     agentUnavailable: "I cannot do that from here yet.",
     failed: "I could not complete that request.",
+    confirmPrefix: "I need a confirmation for:",
+    confirmHow: "Reply 'om yes' to confirm or 'om no' to cancel.",
+    denied: "Action cancelled: it was not confirmed.",
+    fullAnswerInPanel: "(full answer on the panel)",
   },
 } as const;
 

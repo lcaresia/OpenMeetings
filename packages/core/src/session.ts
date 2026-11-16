@@ -8,6 +8,7 @@ import {
 import { t } from "./i18n";
 import type { LlmEngine } from "./llm";
 import { MeetingPipeline, type PipelineEvent, type PipelineOptions } from "./pipeline";
+import type { MeetingState } from "./state";
 import type {
   CaptureEvent,
   CaptureSource,
@@ -27,8 +28,29 @@ export type SessionOptions = PipelineOptions & {
 
 export type SessionStatus = "listening" | "paused" | "left";
 
+export type ApprovalRequest = {
+  id: string;
+  /** Tool that wants to act outside the meeting (create a card, send an e-mail...). */
+  tool: string;
+  args: unknown;
+  /** One line a person can read and say yes or no to. */
+  summary: string;
+};
+
+/** Progress of one agent run. Mirrors the AG-UI event vocabulary so it maps one to one. */
+export type AgentEvent =
+  | { type: "run_started"; runId: string; command: Command }
+  | { type: "run_finished"; runId: string }
+  | { type: "run_error"; runId: string; message: string }
+  | { type: "agent_text"; runId: string; messageId: string; delta: string }
+  | { type: "tool_call"; runId: string; callId: string; name: string; args: string }
+  | { type: "tool_result"; runId: string; callId: string; content: string; isError?: boolean }
+  | { type: "approval_request"; runId: string; request: ApprovalRequest }
+  | { type: "approval_resolved"; id: string; approved: boolean; by: string };
+
 export type SessionEvent =
   | PipelineEvent
+  | AgentEvent
   | { type: "command"; command: Command }
   | { type: "reply"; text: string; command?: Command }
   | { type: "status"; status: SessionStatus; reason?: string };
@@ -37,6 +59,14 @@ export type SessionEvent =
 export interface AgentRunner {
   run(command: Command, session: MeetingSession): Promise<string>;
 }
+
+const CONTROL_INTENTS: ReadonlySet<string> = new Set([
+  "leave",
+  "pause",
+  "resume",
+  "approve",
+  "deny",
+]);
 
 /** How long after "Open Meetings." the same speaker's next sentence still counts as the request. */
 const WAKE_FOLLOW_UP_MS = 10_000;
@@ -56,6 +86,11 @@ export class MeetingSession {
   private pausedForConsent = false;
   private armed?: { speaker: string; untilMs: number };
   private readonly people = new Map<string, Participant>();
+  private readonly approvals = new Map<string, (approved: boolean) => void>();
+  private signalLeft: () => void = () => undefined;
+  private readonly left = new Promise<undefined>((resolve) => {
+    this.signalLeft = () => resolve(undefined);
+  });
 
   constructor(
     readonly source: CaptureSource,
@@ -77,24 +112,77 @@ export class MeetingSession {
     for (const listener of this.listeners) listener(event);
   }
 
+  /** Lets the agent layer report its progress on the same stream as everything else. */
+  publish(event: AgentEvent | Extract<PipelineEvent, { type: "usage" }>): void {
+    this.emit(event);
+  }
+
+  /**
+   * Asks the people in the meeting to confirm an action with effects outside it. Posts the
+   * question in the call chat and on the panel; resolves on `om sim` / `om não`, on
+   * `resolveApproval`, or as a refusal after the timeout.
+   */
+  async requestApproval(
+    runId: string,
+    request: ApprovalRequest,
+    timeoutMs = 120_000,
+  ): Promise<boolean> {
+    this.emit({ type: "approval_request", runId, request });
+    const approved = new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => this.resolveApproval(request.id, false, "timeout"), timeoutMs);
+      this.approvals.set(request.id, (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      });
+    });
+    await this.say(
+      `${t(this.options.language, "confirmPrefix")} ${request.summary}\n${t(this.options.language, "confirmHow")}`,
+    );
+    return approved;
+  }
+
+  /** Settles a pending approval. Returns false when there was nothing to settle. */
+  resolveApproval(id: string | undefined, approved: boolean, by: string): boolean {
+    const target = id ?? [...this.approvals.keys()].at(-1);
+    const settle = target ? this.approvals.get(target) : undefined;
+    if (!target || !settle) return false;
+    this.approvals.delete(target);
+    this.emit({ type: "approval_resolved", id: target, approved, by });
+    settle(approved);
+    return true;
+  }
+
   /** Runs until the source ends or the assistant is asked to leave. */
   async run(): Promise<void> {
     try {
-      for await (const event of this.source.start(this.meeting)) {
+      const events = this.source.start(this.meeting)[Symbol.asyncIterator]();
+      while (this.status !== "left") {
+        // `leave()` can be called from outside (the panel) while no event is arriving.
+        const next = await Promise.race([events.next(), this.left]);
+        if (!next || next.done) break;
         // The first event means we are in the call: say who we are before anything else.
         this.justAnnounced = !this.announced;
         if (!this.announced) await this.announce();
-        this.onEvent(event);
+        this.onEvent(next.value);
         this.justAnnounced = false;
-        if (this.status === "left") break;
       }
     } finally {
+      for (const id of [...this.approvals.keys()]) this.resolveApproval(id, false, "meeting ended");
       await this.commands;
       this.pipeline.flush();
       await this.pipeline.idle();
       await this.source.stop();
       this.setStatus("left", "ended");
     }
+  }
+
+  /** Registers something the agent produced (a doc, a board...) in the meeting state. */
+  addArtifact(artifact: MeetingState["artifacts"][number]): void {
+    this.pipeline.mutate((draft) => {
+      const index = draft.artifacts.findIndex((existing) => existing.id === artifact.id);
+      if (index === -1) draft.artifacts.push(artifact);
+      else draft.artifacts[index] = artifact;
+    });
   }
 
   /** A command typed in the web panel. */
@@ -106,6 +194,7 @@ export class MeetingSession {
   leave(reason = "requested"): void {
     if (this.status === "left") return;
     this.setStatus("left", reason);
+    this.signalLeft();
   }
 
   private nowMs(): number {
@@ -239,6 +328,11 @@ export class MeetingSession {
   private control(command: Command): void {
     if (this.status === "left") return;
     const language = this.options.language;
+    if (command.intent === "approve" || command.intent === "deny") {
+      // Only meaningful while an action is waiting for a yes or no.
+      this.resolveApproval(undefined, command.intent === "approve", command.from);
+      return;
+    }
     this.emit({ type: "command", command });
     let message: string;
     if (command.intent === "leave") {
@@ -275,7 +369,7 @@ export class MeetingSession {
     });
     const command: Command = { ...input, ...classified };
     if (command.intent === "none") return;
-    if (command.intent === "leave" || command.intent === "pause" || command.intent === "resume") {
+    if (CONTROL_INTENTS.has(command.intent)) {
       this.control(command);
       return;
     }

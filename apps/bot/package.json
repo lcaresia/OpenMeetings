@@ -1,0 +1,20 @@
+{
+  "name": "@open-meetings/bot",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/main.ts"
+  },
+  "dependencies": {
+    "playwright": "^1.65.0",
+    "ws": "^8.23.0"
+  },
+  "devDependencies": {
+    "@open-meetings/core": "workspace:*",
+    "@types/ws": "^8.18.0",
+    "tsup": "^8.5.0"
+  }
+}
