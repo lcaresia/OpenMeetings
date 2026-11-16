@@ -1,0 +1,33 @@
+{
+  "meeting": {
+    "id": "weekly-sync",
+    "title": "Sync semanal do lançamento",
+    "language": "pt-BR",
+    "date": "2026-11-16"
+  },
+  "participants": [
+    { "id": "ana", "name": "Ana Souza" },
+    { "id": "bruno", "name": "Bruno Lima" },
+    { "id": "carla", "name": "Carla Mendes" }
+  ],
+  "events": [
+    { "t": 0, "type": "join", "participant": "ana" },
+    { "t": 500, "type": "join", "participant": "bruno" },
+    { "t": 900, "type": "join", "participant": "carla" },
+    { "t": 5000, "type": "caption", "speaker": "ana", "text": "Bom dia pessoal, vamos começar o sync semanal do lançamento do aplicativo." },
+    { "t": 12000, "type": "caption", "speaker": "bruno", "text": "Bom dia. Do lado do backend a API de pagamentos está pronta, falta só revisar o contrato com o gateway." },
+    { "t": 24000, "type": "caption", "speaker": "carla", "text": "No design fechamos as telas de onboarding, mas ainda preciso validar o fluxo de cadastro com usuários." },
+    { "t": 36000, "type": "caption", "speaker": "ana", "text": "Perfeito. Sobre a data, eu proponho lançar no dia 15 de dezembro." },
+    { "t": 45000, "type": "caption", "speaker": "bruno", "text": "Para mim funciona, desde que o contrato esteja assinado." },
+    { "t": 52000, "type": "caption", "speaker": "carla", "text": "Concordo com a data." },
+    { "t": 58000, "type": "caption", "speaker": "ana", "text": "Então fica decidido que o lançamento será no dia 15 de dezembro." },
+    { "t": 70000, "type": "caption", "speaker": "ana", "text": "Bruno, você fica responsável por atualizar o contrato com o gateway até sexta-feira." },
+    { "t": 80000, "type": "caption", "speaker": "bruno", "text": "Combinado." },
+    { "t": 86000, "type": "caption", "speaker": "carla", "text": "Eu fico responsável por rodar o teste de usabilidade do cadastro até quarta-feira." },
+    { "t": 98000, "type": "caption", "speaker": "bruno", "text": "Alguém sabe se o jurídico já aprovou os termos de uso?" },
+    { "t": 106000, "type": "caption", "speaker": "ana", "text": "Não sei, isso fica em aberto, vou perguntar para eles." },
+    { "t": 118000, "type": "caption", "speaker": "carla", "text": "Sobre o preço, decidimos manter o plano gratuito com limite de três projetos." },
+    { "t": 130000, "type": "caption", "speaker": "ana", "text": "Open Meetings, quais são os itens de ação?" },
+    { "t": 150000, "type": "caption", "speaker": "ana", "text": "Obrigada pessoal, até a próxima semana." }
+  ]
+}

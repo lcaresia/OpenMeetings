@@ -1,0 +1,12 @@
+{
+  "decisions": [
+    { "includes": "15 de dezembro" },
+    { "includes": "plano gratuito" }
+  ],
+  "actionItems": [
+    { "includes": "contrato", "owner": "Bruno", "due": "sexta-feira" },
+    { "includes": "teste de usabilidade", "owner": "Carla", "due": "quarta-feira" }
+  ],
+  "openQuestions": [{ "includes": "termos de uso" }],
+  "commands": [{ "said": "quais são os itens de ação", "replyIncludes": ["contrato", "teste de usabilidade"] }]
+}
