@@ -26,5 +26,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: Start the built bundles
+        run: node scripts/smoke-dist.mjs
       - name: Replay a recorded meeting with the built CLI
         run: node apps/server/dist/main.js replay weekly-sync --mock

@@ -23,4 +23,5 @@ step lint pnpm lint
 step typecheck pnpm typecheck
 step test pnpm test
 step build pnpm build
+step bundles node scripts/smoke-dist.mjs
 exit $status
