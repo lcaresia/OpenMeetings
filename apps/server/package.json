@@ -1,6 +1,6 @@
 {
   "name": "open-meetings",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Open source AI meeting agent: joins the call, transcribes, tracks decisions and action items, works with any LLM, local or hosted.",
   "license": "Apache-2.0",
   "repository": {
