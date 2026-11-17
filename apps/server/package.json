@@ -19,17 +19,24 @@
     "dev": "tsx src/cli/main.ts"
   },
   "dependencies": {
+    "@ag-ui/core": "1.0.4",
+    "@ag-ui/encoder": "1.0.4",
     "@anthropic-ai/sdk": "^1.9.0",
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "fast-json-patch": "^3.1.1",
     "pino": "^10.0.0",
     "ws": "^8.23.0",
     "yaml": "^2.8.0",
     "zod": "^4.6.0"
   },
   "devDependencies": {
+    "@ag-ui/client": "1.0.4",
     "@open-meetings/config": "workspace:*",
     "@open-meetings/core": "workspace:*",
     "@open-meetings/engines": "workspace:*",
+    "@open-meetings/tools": "workspace:*",
     "@types/ws": "^8.18.2",
+    "openai": "7.57.0",
     "tsup": "^8.5.0"
   }
 }

@@ -81,18 +81,23 @@ export function exportArtifact(artifact: Artifact): {
   if (content.type === "doc") {
     return { filename: `${slug}.md`, mime: "text/markdown", body: content.markdown };
   }
-  const table: unknown[][] =
-    content.type === "sheet"
-      ? [content.columns, ...content.rows]
-      : content.type === "board"
-        ? [
-            ["column", "card"],
-            ...content.columns.flatMap((c) => c.cards.map((card) => [c.title, card])),
-          ]
-        : [
-            ["task", "owner", "start", "end"],
-            ...content.tasks.map((t) => [t.name, t.owner, t.start, t.end]),
-          ];
-  const body = table.map((row) => row.map(csvCell).join(",")).join("\n");
+  const body = artifactTable(content)
+    .map((row) => row.map(csvCell).join(","))
+    .join("\n");
   return { filename: `${slug}.csv`, mime: "text/csv", body };
+}
+
+/** The tabular kinds as rows, header first. */
+export function artifactTable(content: Exclude<ArtifactContent, { type: "doc" }>): unknown[][] {
+  if (content.type === "sheet") return [content.columns, ...content.rows];
+  if (content.type === "board") {
+    return [
+      ["column", "card"],
+      ...content.columns.flatMap((c) => c.cards.map((card) => [c.title, card])),
+    ];
+  }
+  return [
+    ["task", "owner", "start", "end"],
+    ...content.tasks.map((t) => [t.name, t.owner, t.start, t.end]),
+  ];
 }

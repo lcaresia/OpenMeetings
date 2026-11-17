@@ -36,7 +36,8 @@ export function createLiveSource() {
     },
     push: (event) => queue.push(event),
     say(speaker, text) {
-      clock += 3000;
+      // Gaps longer than the pipeline's merge window, so every call stays its own segment.
+      clock += 5000;
       queue.push({
         type: "transcript",
         segment: {

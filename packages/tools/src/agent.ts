@@ -117,6 +117,9 @@ export function createAgent(options: AgentOptions): AgentRunner {
         {
           role: "user",
           content: [
+            ...(session.options.memory
+              ? [`PREVIOUS MEETING OF THIS SERIES:\n${session.options.memory}`]
+              : []),
             `MEETING STATE:\n${JSON.stringify(session.pipeline.state)}`,
             `RECENT TRANSCRIPT:\n${recentTranscript(session, options.transcriptChars ?? 6000)}`,
             `REQUEST from ${command.from} (${command.via}):\n${command.request}`,

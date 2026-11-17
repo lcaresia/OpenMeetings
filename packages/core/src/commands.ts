@@ -27,6 +27,8 @@ export type Command = {
   via: "voice" | "chat" | "panel";
   atMs: number;
   sourceSegmentId?: string;
+  /** Set by callers that need to match the reply to their request (panel, AG-UI, API). */
+  id?: string;
 };
 
 /** Lowercase, no accents, punctuation as spaces. */
