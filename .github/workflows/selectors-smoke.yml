@@ -26,7 +26,7 @@ jobs:
         if: env.OM_SMOKE_MEET_URL != ''
       - uses: pnpm/action-setup@v4
         if: env.OM_SMOKE_MEET_URL != ''
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: env.OM_SMOKE_MEET_URL != ''
         with:
           node-version: 22
