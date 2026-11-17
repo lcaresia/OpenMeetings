@@ -6,7 +6,7 @@ models. The local profile needs a GPU machine instead.
 ## 1. Install
 
 ```bash
-git clone https://github.com/<owner>/open-meetings && cd open-meetings
+git clone https://github.com/lcaresia/OpenMeetings && cd OpenMeetings
 cp .env.example .env
 ```
 
