@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "description": "Open source AI meeting agent: joins the call, transcribes, tracks decisions and action items, works with any LLM, local or hosted.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lcaresia/OpenMeetings.git",
+    "directory": "apps/server"
+  },
+  "homepage": "https://github.com/lcaresia/OpenMeetings#readme",
+  "bugs": "https://github.com/lcaresia/OpenMeetings/issues",
   "type": "module",
   "bin": {
     "om": "./dist/main.js",

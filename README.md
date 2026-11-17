@@ -54,7 +54,7 @@ inspired this one.
 With Docker, everything local, no API key (first start downloads the models, about 15 GB):
 
 ```bash
-git clone https://github.com/lcaresia/open-meetings && cd open-meetings
+git clone https://github.com/lcaresia/OpenMeetings && cd OpenMeetings
 docker compose --profile local up -d
 ```
 

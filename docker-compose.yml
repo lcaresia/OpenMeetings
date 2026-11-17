@@ -17,7 +17,7 @@ x-keys: &keys
 
 services:
   server:
-    image: ${OM_SERVER_IMAGE:-ghcr.io/open-meetings/open-meetings-server:latest}
+    image: ${OM_SERVER_IMAGE:-ghcr.io/lcaresia/open-meetings-server:latest}
     build: { context: ., dockerfile: docker/server.Dockerfile }
     restart: unless-stopped
     ports: ["127.0.0.1:${OM_PORT:-4319}:4319"]
@@ -35,7 +35,7 @@ services:
       # - ./openmeetings.config.yaml:/app/openmeetings.config.yaml:ro
 
   bot:
-    image: ${OM_BOT_IMAGE:-ghcr.io/open-meetings/open-meetings-bot:latest}
+    image: ${OM_BOT_IMAGE:-ghcr.io/lcaresia/open-meetings-bot:latest}
     build: { context: ., dockerfile: docker/bot.Dockerfile }
     restart: unless-stopped
     depends_on: [server]
