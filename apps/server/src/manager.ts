@@ -3,6 +3,7 @@ import { type Config, isLocalOnly } from "@open-meetings/config";
 import {
   type AgentRunner,
   type Artifact,
+  artifactUrl,
   type CaptureSource,
   type Engines,
   emptyState,
@@ -133,6 +134,40 @@ export class MeetingManager {
 
   artifact(id: string) {
     return this.deps.store.artifacts.get(id);
+  }
+
+  /** Saves an edit made on the panel and tells every client about it. */
+  async updateArtifact(
+    id: string,
+    content: Artifact["content"],
+    title?: string,
+  ): Promise<Artifact | undefined> {
+    const existing = await this.deps.store.artifacts.get(id);
+    if (!existing || existing.content.type !== content.type) return undefined;
+    const updated: Artifact = {
+      ...existing,
+      ...(title ? { title } : {}),
+      content,
+      updatedAt: new Date().toISOString(),
+    };
+    await this.deps.store.artifacts.save(updated);
+    const entry = {
+      id,
+      type: content.type,
+      url: artifactUrl(id),
+      title: updated.title,
+      updatedAt: updated.updatedAt,
+    };
+    const live = this.live.get(existing.meetingId);
+    if (live) live.session.addArtifact(entry);
+    else {
+      const record = this.deps.store.getMeeting(existing.meetingId);
+      if (record) {
+        const artifacts = record.state.artifacts.map((item) => (item.id === id ? entry : item));
+        this.deps.store.updateMeeting(record.id, { state: { ...record.state, artifacts } });
+      }
+    }
+    return updated;
   }
 
   exportArtifact(artifact: Artifact, format?: string): ExportedFile {

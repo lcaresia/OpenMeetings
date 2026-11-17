@@ -85,7 +85,9 @@ export async function startApp(loaded: LoadedConfig, options: AppOptions = {}): 
         logger.error("bot entry not found (build apps/bot or set OM_BOT_ENTRY)");
         return;
       }
-      worker = spawn(process.execPath, [entry], {
+      // A .ts entry (development, tests) runs through tsx.
+      const args = entry.endsWith(".ts") ? ["--import", "tsx", entry] : [entry];
+      worker = spawn(process.execPath, args, {
         env: {
           ...process.env,
           OM_SERVER_WS: `${serverUrl.replace(/^http/, "ws")}/bot`,

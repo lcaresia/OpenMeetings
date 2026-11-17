@@ -80,6 +80,121 @@ function intent(req: ChatRequest): string {
   return JSON.stringify({ intent: quickIntent(request) ?? "agent", request });
 }
 
+type AgentTurn = { text?: string; toolCalls?: { name: string; arguments: unknown }[] };
+
+const WEEKDAYS = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+
+/** Turns "sexta-feira" or "2026-11-20" into a date, counting from `today`. */
+function dueDate(due: string | undefined, today: string, fallbackDays: number): string {
+  if (due && /^\d{4}-\d{2}-\d{2}$/.test(due)) return due;
+  const base = new Date(`${today}T12:00:00Z`);
+  const name = (due ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const weekday = WEEKDAYS.findIndex((day) => name.startsWith(day));
+  const days = weekday === -1 ? fallbackDays : (weekday - base.getUTCDay() + 7) % 7 || 7;
+  return new Date(base.getTime() + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+/**
+ * Builds artifacts from the notes with fixed rules, so the demo (`om serve --demo --mock`) and
+ * the end-to-end tests exercise every tool without a model.
+ */
+function agentTurn(req: ChatRequest): AgentTurn {
+  const last = req.messages.at(-1);
+  if (last?.role === "tool") {
+    return { text: last.isError ? `Não consegui: ${last.content}` : `Pronto. ${last.content}` };
+  }
+  const user = req.messages.findLast((message) => message.role === "user")?.content ?? "";
+  const system = req.messages.find((message) => message.role === "system")?.content ?? "";
+  const today = /\d{4}-\d{2}-\d{2}/.exec(system)?.[0] ?? new Date().toISOString().slice(0, 10);
+  const request = (/REQUEST from [^\n]*\n([\s\S]*)$/.exec(user)?.[1] ?? user).toLowerCase();
+  let state: {
+    decisions?: { text: string }[];
+    actionItems?: { text: string; owner?: string; due?: string; status?: string }[];
+  } = {};
+  try {
+    state = JSON.parse(/MEETING STATE:\n(.*)\n/.exec(user)?.[1] ?? "{}");
+  } catch {
+    // keep the empty notes
+  }
+  const items = state.actionItems ?? [];
+  const decisions = state.decisions ?? [];
+
+  if (/cronograma|timeline|gantt/.test(request)) {
+    return {
+      toolCalls: [
+        {
+          name: "create_timeline",
+          arguments: {
+            title: "Cronograma",
+            tasks: items.map((item, i) => ({
+              name: item.text,
+              ...(item.owner ? { owner: item.owner } : {}),
+              start: today,
+              end: dueDate(item.due, today, 7 + i * 3),
+            })),
+          },
+        },
+      ],
+    };
+  }
+  if (/quadro|board|kanban/.test(request)) {
+    const owners = [...new Set(items.map((item) => item.owner ?? "Sem responsável"))];
+    return {
+      toolCalls: [
+        {
+          name: "create_board",
+          arguments: {
+            title: "Quadro de tarefas",
+            columns: [
+              ...owners.map((owner) => ({
+                title: owner,
+                cards: items
+                  .filter((item) => (item.owner ?? "Sem responsável") === owner)
+                  .map((item) => item.text),
+              })),
+              { title: "Decisões", cards: decisions.map((decision) => decision.text) },
+            ],
+          },
+        },
+      ],
+    };
+  }
+  if (/planilha|tabela|sheet|spreadsheet/.test(request)) {
+    return {
+      toolCalls: [
+        {
+          name: "create_sheet",
+          arguments: {
+            title: "Itens de ação",
+            columns: ["Item", "Responsável", "Prazo", "Status"],
+            rows: items.map((item) => [
+              item.text,
+              item.owner ?? "",
+              item.due ?? "",
+              item.status ?? "open",
+            ]),
+          },
+        },
+      ],
+    };
+  }
+  if (/documento|doc|plano|relatorio|relatório|brief/.test(request)) {
+    const markdown = [
+      "# Plano",
+      "",
+      "## Decisões",
+      ...decisions.map((decision) => `- ${decision.text}`),
+      "",
+      "## Próximos passos",
+      ...items.map(
+        (item) => `- **${item.owner ?? "?"}**: ${item.text}${item.due ? ` (até ${item.due})` : ""}`,
+      ),
+    ].join("\n");
+    return { toolCalls: [{ name: "create_doc", arguments: { title: "Plano", markdown } }] };
+  }
+  return { text: "No modo de demonstração eu sei criar cronograma, quadro, planilha e documento." };
+}
+
 /**
  * A deterministic stand-in for a language model, for CI. It answers each kind of call
  * (`ChatRequest.purpose`) with fixed rules, so the whole pipeline runs with no network, no
@@ -99,14 +214,30 @@ export function createRuleLlm(
     async *chat(req: ChatRequest): AsyncGenerator<ChatDelta> {
       calls.push(req);
       const purpose = req.purpose ?? "";
-      const text = (responders[purpose] ?? builtin[purpose])?.(req) ?? "";
+      const custom = responders[purpose] ?? builtin[purpose];
+      const turn: AgentTurn = custom
+        ? { text: custom(req) ?? "" }
+        : purpose === "agent" && req.tools?.length
+          ? agentTurn(req)
+          : {};
+      const text = turn.text ?? "";
       if (text) yield { type: "text", text };
+      for (const [i, call] of (turn.toolCalls ?? []).entries()) {
+        yield {
+          type: "tool_call",
+          call: {
+            id: `rule_${calls.length}_${i}`,
+            name: call.name,
+            arguments: JSON.stringify(call.arguments),
+          },
+        };
+      }
       const inputChars = req.messages.reduce((sum, message) => sum + message.content.length, 0);
       yield {
         type: "usage",
         usage: { inputTokens: Math.ceil(inputChars / 4), outputTokens: Math.ceil(text.length / 4) },
       };
-      yield { type: "done", finishReason: "stop" };
+      yield { type: "done", finishReason: turn.toolCalls?.length ? "tool_calls" : "stop" };
     },
   };
 }

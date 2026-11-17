@@ -123,7 +123,7 @@ export const OBSERVER_SCRIPT = String.raw`(selectors) => {
 }`;
 
 /** Returns the people on screen, excluding the bot itself. Argument: PageSelectors. */
-export const PARTICIPANTS_SCRIPT = String.raw`(selectors) => {
+export const PARTICIPANTS_SCRIPT = `(selectors) => {
   const ignore = new RegExp(selectors.ignoreNames);
   const people = new Map();
   for (const tile of document.querySelectorAll(selectors.tile)) {
@@ -145,7 +145,7 @@ export const PARTICIPANTS_SCRIPT = String.raw`(selectors) => {
  * one-second chunks. Installed before Meet loads, because it wraps RTCPeerConnection.
  * Experimental: needs `--autoplay-policy=no-user-gesture-required`.
  */
-export const AUDIO_SCRIPT = String.raw`(() => {
+export const AUDIO_SCRIPT = `(() => {
   const Original = window.RTCPeerConnection;
   if (!Original || window.__omAudio) return;
   window.__omAudio = true;

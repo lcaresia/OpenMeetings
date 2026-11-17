@@ -58,12 +58,8 @@ async function main(): Promise<number> {
     await probe("preJoin.joinButton", SELECTORS.preJoin.joinButton);
     await probe("preJoin.micOff", SELECTORS.preJoin.micOff);
     await probe("preJoin.camOff", SELECTORS.preJoin.camOff);
-    const body = (
-      await page
-        .locator("body")
-        .innerText()
-        .catch(() => "")
-    ).slice(0, 400);
+    const visible = await page.evaluate("document.body.innerText").catch(() => "");
+    const body = String(visible).slice(0, 400);
     const blocked = SELECTORS.states.blocked.some((text) => body.includes(text));
     console.log(
       JSON.stringify({ url: new URL(url).pathname, blocked, checks, pageText: body }, null, 2),

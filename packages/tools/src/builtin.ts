@@ -43,6 +43,7 @@ async function saveArtifact(
     type: content.type,
     url: artifactUrl(artifact.id),
     title: artifact.title,
+    updatedAt: artifact.updatedAt,
   });
   const verb = existing ? "Updated" : "Created";
   return {

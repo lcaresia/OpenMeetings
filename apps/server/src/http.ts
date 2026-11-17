@@ -5,7 +5,7 @@ import { extname, join, normalize, resolve } from "node:path";
 import type { RunAgentInput } from "@ag-ui/core";
 import { EventEncoder } from "@ag-ui/encoder";
 import type { Config } from "@open-meetings/config";
-import type { exportArtifact, Logger } from "@open-meetings/core";
+import { artifactContentSchema, type exportArtifact, type Logger } from "@open-meetings/core";
 import { handleAguiRun } from "./agui";
 import type { MeetingManager } from "./manager";
 
@@ -169,12 +169,14 @@ export function apiRouter(deps: ApiDeps): Router {
       });
     })
     .add("POST", "/api/meetings", async ({ body }) => {
-      const input = (await body()) as { url?: string; title?: string };
+      // `platform` overrides detection from the link (self-hosted or test deployments).
+      const input = (await body()) as { url?: string; title?: string; platform?: string };
       if (!input.url || !/^https?:\/\//.test(input.url))
         throw new HttpError(400, "a meeting link is required");
       const live = manager.start({
         url: input.url,
         ...(input.title ? { title: input.title } : {}),
+        ...(input.platform ? { platform: input.platform } : {}),
       });
       return { id: live.record.id, status: live.record.status };
     })
@@ -217,6 +219,13 @@ export function apiRouter(deps: ApiDeps): Router {
     .add("GET", "/api/artifacts/:id", async ({ params }) =>
       need(await manager.artifact(params.id ?? ""), "artifact not found"),
     )
+    .add("PUT", "/api/artifacts/:id", async ({ params, body }) => {
+      const input = (await body()) as { title?: string; content?: unknown };
+      const parsed = artifactContentSchema.safeParse(input.content);
+      if (!parsed.success) throw new HttpError(400, "invalid artifact content");
+      const saved = await manager.updateArtifact(params.id ?? "", parsed.data, input.title);
+      return need(saved, "artifact not found, or of another type");
+    })
     .add("GET", "/api/artifacts/:id/export", async ({ params, res, url }) => {
       const artifact = need(
         await manager.artifact(params.id ?? ""),

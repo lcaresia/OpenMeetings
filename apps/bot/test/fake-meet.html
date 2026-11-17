@@ -89,6 +89,25 @@
     $("input").value = "";
   });
 
+  // ?autoplay=1 plays a short meeting on its own once the bot is in the call and watching,
+  // for end-to-end tests where nobody can drive the page.
+  if (params.get("autoplay")) {
+    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    (async () => {
+      while (!window.__omObserver) await wait(100);
+      fakeMeet.join("ana", "Ana Souza");
+      await wait(500);
+      const block = fakeMeet.speak("Ana Souza");
+      fakeMeet.say(block, "Então fica decidido que");
+      await wait(300);
+      fakeMeet.say(block, "Então fica decidido que o piloto começa em janeiro.");
+      await wait(2000);
+      fakeMeet.chat("Ana Souza", "om o que decidimos?");
+      await wait(3000);
+      fakeMeet.end();
+    })();
+  }
+
   // Test hooks.
   window.fakeMeet = {
     state,
