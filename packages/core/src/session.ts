@@ -24,6 +24,8 @@ export type SessionOptions = PipelineOptions & {
   internalDomains: string[];
   /** The name the assistant shows in the call, to ignore its own chat messages. */
   displayName?: string;
+  /** Notes of the previous meeting of the same series (JSON), for "what was left pending?". */
+  memory?: string;
 };
 
 export type SessionStatus = "listening" | "paused" | "left";
@@ -54,6 +56,11 @@ export type SessionEvent =
   | { type: "command"; command: Command }
   | { type: "reply"; text: string; command?: Command }
   | { type: "status"; status: SessionStatus; reason?: string };
+
+export type SessionHooks = {
+  /** Runs once the meeting is over but the source is still connected. */
+  beforeStop?: (session: MeetingSession) => Promise<void>;
+};
 
 /** Handles every request the built-in commands do not cover. Wired in by the agent layer. */
 export interface AgentRunner {
@@ -98,6 +105,7 @@ export class MeetingSession {
     private readonly llm: { fast: LlmEngine; smart: LlmEngine },
     readonly options: SessionOptions,
     private readonly agent?: AgentRunner,
+    private readonly hooks: SessionHooks = {},
   ) {
     this.pipeline = new MeetingPipeline(meeting, llm, options);
     this.pipeline.on((event) => this.emit(event));
@@ -171,6 +179,12 @@ export class MeetingSession {
       await this.commands;
       this.pipeline.flush();
       await this.pipeline.idle();
+      // Still connected: the last chance to post the minutes in the call chat.
+      try {
+        await this.hooks.beforeStop?.(this);
+      } catch (error) {
+        this.emit({ type: "warning", message: `closing step failed: ${(error as Error).message}` });
+      }
       await this.source.stop();
       this.setStatus("left", "ended");
     }
@@ -186,8 +200,14 @@ export class MeetingSession {
   }
 
   /** A command typed in the web panel. */
-  submit(text: string, from = "panel"): Promise<void> {
-    return this.enqueue({ request: text, from, via: "panel", atMs: this.nowMs() });
+  submit(text: string, from = "panel", id?: string): Promise<void> {
+    return this.enqueue({
+      request: text,
+      from,
+      via: "panel",
+      atMs: this.nowMs(),
+      ...(id ? { id } : {}),
+    });
   }
 
   /** Leaves the meeting. Safe to call more than once. */
@@ -208,7 +228,8 @@ export class MeetingSession {
     if (changed) this.emit({ type: "status", status, ...(reason ? { reason } : {}) });
   }
 
-  private async say(text: string, command?: Command): Promise<void> {
+  /** Posts in the call chat (when the source has one) and on the event stream. */
+  async say(text: string, command?: Command): Promise<void> {
     this.emit({ type: "reply", text, ...(command ? { command } : {}) });
     try {
       await this.source.sendChat?.(text);

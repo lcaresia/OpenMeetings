@@ -151,6 +151,13 @@ export const configSchema = z.object({
       captionsLanguage: z.string().optional(),
       captureAudio: z.boolean().default(false),
       admissionTimeoutSec: z.coerce.number().int().min(10).default(300),
+      /**
+       * Start a bot process on this machine when a meeting needs one. Turn off when the bot runs
+       * elsewhere (its own container) and connects with OM_BOT_TOKEN.
+       */
+      spawn: z.boolean().default(true),
+      /** Shared secret between server and bot. Generated per run when absent and spawn is on. */
+      token: z.string().optional(),
     })
     .prefault({}),
 
