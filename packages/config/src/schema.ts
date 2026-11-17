@@ -179,6 +179,10 @@ export const configSchema = z.object({
         .object({ enabled: z.boolean().default(true), path: z.string().default("/v1") })
         .prefault({}),
       acp: z.object({ enabled: z.boolean().default(true) }).prefault({}),
+      /** Open Meetings as a remote MCP server (Streamable HTTP), for hosts such as OpenDots. */
+      mcp: z
+        .object({ enabled: z.boolean().default(true), path: z.string().default("/mcp") })
+        .prefault({}),
     })
     .prefault({}),
 

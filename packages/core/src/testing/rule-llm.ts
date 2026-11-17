@@ -74,6 +74,35 @@ function stateUpdate(req: ChatRequest): string {
   return JSON.stringify({ patch: ops });
 }
 
+/** Lists what is still open in the saved meetings it was given. */
+function history(req: ChatRequest): string {
+  const context = req.messages.find(
+    (m) => m.role === "system" && m.content.startsWith("MEETINGS:"),
+  );
+  const json = context?.content.split("\n")[1] ?? "[]";
+  let meetings: {
+    title?: string;
+    date: string;
+    actionItems: { text: string; owner?: string; status: string }[];
+  }[] = [];
+  try {
+    meetings = JSON.parse(json);
+  } catch {
+    // no notes given
+  }
+  const lines = meetings.flatMap((meeting) =>
+    meeting.actionItems
+      .filter((item) => item.status !== "done")
+      .map(
+        (item) =>
+          `- ${item.text}${item.owner ? ` (${item.owner})` : ""}, ${meeting.title ?? "?"} em ${meeting.date}`,
+      ),
+  );
+  return lines.length
+    ? `Pendências:\n${lines.join("\n")}`
+    : "Não encontrei pendências nas reuniões salvas.";
+}
+
 /** Routes a request by keyword; anything unrecognized goes to the agent. */
 function intent(req: ChatRequest): string {
   const user = req.messages.findLast((message) => message.role === "user")?.content ?? "";
@@ -205,7 +234,7 @@ export function createRuleLlm(
   responders: Record<string, Responder> = {},
 ): LlmEngine & { calls: ChatRequest[] } {
   const calls: ChatRequest[] = [];
-  const builtin: Record<string, Responder> = { "state-update": stateUpdate, intent };
+  const builtin: Record<string, Responder> = { "state-update": stateUpdate, intent, history };
 
   return {
     provider: "rule",

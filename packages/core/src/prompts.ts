@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-export const PROMPT_NAMES = ["state-update", "intent", "agent", "minutes"] as const;
+export const PROMPT_NAMES = ["state-update", "intent", "agent", "minutes", "history"] as const;
 export type PromptName = (typeof PROMPT_NAMES)[number];
 
 /** `prompts/` sits next to `src/` in the repo and next to the bundle in a published build. */

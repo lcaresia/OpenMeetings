@@ -7,12 +7,15 @@ import { join, resolve } from "node:path";
 import type { LoadedConfig } from "@open-meetings/config";
 import { createLogger, type Engines, type Logger } from "@open-meetings/core";
 import { createEngines, type FetchLike } from "@open-meetings/engines";
-import { connectMcpServers, type Tool } from "@open-meetings/tools";
+import { acpAgentTools, connectMcpServers, type Tool } from "@open-meetings/tools";
+import { MeetingAssistant } from "./assistant";
 import { BotHub } from "./bot-hub";
 import { attachCaptureHub } from "./capture-hub";
 import { runDoctor } from "./cli/doctor";
 import { createRequestHandler, type Router } from "./http";
 import { MeetingManager } from "./manager";
+import { registerMcpServer } from "./mcp-server";
+import { registerOpenAi } from "./openai";
 import { openSqliteStore } from "./storage/sqlite";
 import type { MeetingStore } from "./storage/store";
 
@@ -108,10 +111,11 @@ export async function startApp(loaded: LoadedConfig, options: AppOptions = {}): 
     engines,
     store,
     logger,
-    tools: [...mcp.tools, ...(options.extraTools ?? [])],
+    tools: [...mcp.tools, ...acpAgentTools(config.tools.acp_agents), ...(options.extraTools ?? [])],
     ...(options.fetch ? { fetch: options.fetch } : {}),
     ...(options.noBot ? {} : { botSource: () => hub.createSource(botJoinOptions(config)) }),
   });
+  const assistant = new MeetingAssistant(manager, engines, config);
 
   const webRoot = options.webRoot ?? findWebRoot();
   const handler = createRequestHandler({
@@ -120,7 +124,20 @@ export async function startApp(loaded: LoadedConfig, options: AppOptions = {}): 
     logger,
     doctor: () => runDoctor(loaded, options.fetch ? { fetch: options.fetch } : {}),
     ...(webRoot ? { webRoot } : {}),
-    extend: (router) => options.extend?.(router, manager),
+    extend: (router) => {
+      if (config.interop.openai.enabled) {
+        registerOpenAi(router, assistant, config.interop.openai.path);
+      }
+      if (config.interop.mcp.enabled) {
+        registerMcpServer(router, {
+          manager,
+          assistant,
+          path: config.interop.mcp.path,
+          panelUrl: () => serverUrl,
+        });
+      }
+      options.extend?.(router, manager);
+    },
   });
   const server = createServer((req, res) => void handler(req, res));
   if (!options.noBot) hub.attach(server);
