@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "tsup",
-    "dev": "tsx src/main.ts"
+    "dev": "tsx src/main.ts",
+    "smoke": "tsx src/smoke.ts"
   },
   "dependencies": {
     "playwright": "^1.65.0",
