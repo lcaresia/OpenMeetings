@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
-import { ConfigError, loadConfig } from "@open-meetings/config";
-import { CLI_NAME, createLogger, PROJECT_NAME, VERSION } from "@open-meetings/core";
+import { ConfigError, loadConfig, parseConfig } from "@open-meetings/config";
+import {
+  CLI_NAME,
+  createLogger,
+  type Engines,
+  FixtureSource,
+  loadFixture,
+  PROJECT_NAME,
+  VERSION,
+} from "@open-meetings/core";
 import { formatReport, runDoctor } from "./doctor";
 import { runReplay } from "./replay";
 
@@ -21,21 +29,56 @@ Options:
       --title <text>    join: meeting title
       --json            Machine-readable output
       --offline         doctor: skip the engine connection tests
-      --mock            replay: use the built-in deterministic model (no config, no network)
-      --speed <n>       replay: play at n times real time (default: no waiting)
+      --mock            replay, serve: use the built-in deterministic model (no config, no network)
+      --demo <fixture>  serve: play a recorded meeting live, to try the panel
+      --speed <n>       replay, serve --demo: play at n times real time
   -h, --help
   -v, --version
 `;
 
-async function serve(configPath?: string): Promise<number> {
+async function serve(options: {
+  config?: string;
+  demo?: string;
+  mock?: boolean;
+  speed?: number;
+}): Promise<number> {
   const { startApp } = await import("../app");
-  const loaded = loadConfig(configPath ? { path: configPath } : {});
   const logger = createLogger("server");
-  const app = await startApp(loaded, { logger });
+  // --mock needs no config file: deterministic models, nothing leaves the machine.
+  const loaded =
+    options.mock && !options.config
+      ? parseConfig(
+          `profile: local
+engines:
+  llm:
+    fast: { provider: openai-compatible, baseUrl: "http://localhost:11434/v1", model: mock }
+    smart: { provider: openai-compatible, baseUrl: "http://localhost:11434/v1", model: mock }
+storage: { driver: sqlite, path: ./data/demo.db }`,
+        )
+      : loadConfig(options.config ? { path: options.config } : {});
+  let engines: Engines | undefined;
+  if (options.mock) {
+    const { createRuleLlm } = await import("@open-meetings/core/testing");
+    const rule = createRuleLlm();
+    engines = { llm: { fast: rule, smart: rule } };
+  }
+  const app = await startApp(loaded, { logger, ...(engines ? { engines } : {}) });
   logger.info(
     { url: app.url, profile: loaded.config.profile },
     `${PROJECT_NAME} no ar: abra ${app.url}`,
   );
+  if (options.demo) {
+    const fixture = loadFixture(options.demo);
+    const source = new FixtureSource(fixture, { speed: options.speed ?? 1 });
+    const live = app.manager.start({
+      source,
+      ...(fixture.meeting.title ? { title: fixture.meeting.title } : {}),
+    });
+    logger.info(
+      { url: `${app.url}/meetings/${live.record.id}` },
+      "reunião de demonstração em andamento",
+    );
+  }
   await new Promise<void>((resolve) => {
     for (const signal of ["SIGINT", "SIGTERM"] as const) {
       process.once(signal, () => {
@@ -87,6 +130,7 @@ async function main(argv: string[]): Promise<number> {
       json: { type: "boolean", default: false },
       offline: { type: "boolean", default: false },
       mock: { type: "boolean", default: false },
+      demo: { type: "string" },
       speed: { type: "string" },
       help: { type: "boolean", short: "h", default: false },
       version: { type: "boolean", short: "v", default: false },
@@ -104,7 +148,12 @@ async function main(argv: string[]): Promise<number> {
 
   switch (command) {
     case "serve":
-      return serve(values.config);
+      return serve({
+        mock: values.mock,
+        ...(values.config ? { config: values.config } : {}),
+        ...(values.demo ? { demo: values.demo } : {}),
+        ...(values.speed ? { speed: Number(values.speed) } : {}),
+      });
     case "join":
       if (!argument) {
         console.error(`Usage: ${CLI_NAME} join <meeting link>`);

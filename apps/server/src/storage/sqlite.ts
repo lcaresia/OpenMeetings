@@ -108,7 +108,10 @@ async function loadSqlite(): Promise<typeof import("node:sqlite")> {
     (original as (...args: unknown[]) => void).call(process, warning, ...rest);
   }) as typeof process.emitWarning;
   try {
-    return await import("node:sqlite");
+    // A computed name: bundlers strip the `node:` prefix from literal imports, and this module
+    // only exists with it.
+    const name = ["node", "sqlite"].join(":");
+    return (await import(name)) as typeof import("node:sqlite");
   } finally {
     process.emitWarning = original;
   }

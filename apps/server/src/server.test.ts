@@ -368,7 +368,7 @@ describe("exports", () => {
         "Custos/2026",
       ),
     );
-    const check = String.raw`
+    const check = `
 import sys, zipfile, xml.dom.minidom
 for path in sys.argv[1:]:
     with zipfile.ZipFile(path) as z:

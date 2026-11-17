@@ -43,6 +43,8 @@ export const meetingStateSchema = z.object({
       type: z.enum(["doc", "board", "sheet", "timeline"]),
       url: z.string(),
       title: z.string().optional(),
+      /** Changes on every edit, so clients know to fetch the content again. */
+      updatedAt: z.string().optional(),
     }),
   ),
   rollingSummary: z.string(),

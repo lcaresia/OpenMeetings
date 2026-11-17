@@ -83,12 +83,9 @@ async function anyVisible(page: Page, selectors: readonly string[]): Promise<boo
 }
 
 async function pageHas(page: Page, phrases: readonly string[]): Promise<boolean> {
-  const body = (
-    await page
-      .locator("body")
-      .innerText()
-      .catch(() => "")
-  ).toLowerCase();
+  // innerText, not textContent: Meet keeps hidden lobby text in the DOM after admission.
+  const text = await page.evaluate("document.body.innerText").catch(() => "");
+  const body = String(text).toLowerCase();
   return phrases.some((phrase) => body.includes(phrase.toLowerCase()));
 }
 

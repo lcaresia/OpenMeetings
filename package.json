@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "biome check .",
     "format": "biome check --write .",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json",
     "test": "vitest run",
     "build": "pnpm -r --if-present build",
     "om": "tsx apps/server/src/cli/main.ts",

@@ -27,7 +27,7 @@ const custom = (name: string, value: unknown) => ({ type: EventType.CUSTOM, name
 
 function lastUserText(input: RunAgentInput): string | undefined {
   const last = input.messages.at(-1);
-  if (!last || last.role !== "user") return undefined;
+  if (last?.role !== "user") return undefined;
   if (typeof last.content === "string") return last.content;
   return last.content
     .map((part) => ("text" in part && typeof part.text === "string" ? part.text : ""))
