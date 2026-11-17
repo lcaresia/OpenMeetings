@@ -11,7 +11,8 @@
       "!**/dist",
       "!**/__snapshots__",
       "!fixtures/**/*.json",
-      "!apps/bot/test/fake-meet.html"
+      "!apps/bot/test/fake-meet.html",
+      "!CHANGELOG.md"
     ]
   },
   "formatter": {
@@ -26,6 +27,14 @@
     }
   },
   "overrides": [
+    {
+      "includes": [
+        "apps/extension/src/manifest.json",
+        "**/package.json",
+        ".release-please-manifest.json"
+      ],
+      "json": { "formatter": { "expand": "always" } }
+    },
     {
       "includes": ["packages/config/src/*.test.ts"],
       "linter": { "rules": { "suspicious": { "noTemplateCurlyInString": "off" } } }

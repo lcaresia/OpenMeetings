@@ -4,18 +4,32 @@
   "version": "0.1.0",
   "description": "Captures the meeting in this tab (no bot joins the call) and sends it to your Open Meetings server.",
   "minimum_chrome_version": "116",
-  "permissions": ["tabCapture", "offscreen", "storage", "activeTab"],
-  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": [
+    "tabCapture",
+    "offscreen",
+    "storage",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Open Meetings",
     "default_icon": "icon.png"
   },
-  "icons": { "128": "icon.png" },
+  "icons": {
+    "128": "icon.png"
+  },
   "content_scripts": [
     {
-      "matches": ["https://meet.google.com/*"],
-      "js": ["captions.js"],
+      "matches": [
+        "https://meet.google.com/*"
+      ],
+      "js": [
+        "captions.js"
+      ],
       "run_at": "document_idle"
     }
   ]
