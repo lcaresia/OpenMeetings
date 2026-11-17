@@ -315,6 +315,10 @@ export class MeetingSession {
     return this.commands;
   }
 
+  private isKnownExternal(sender: string): boolean {
+    return [...this.people.values()].some((p) => p.name === sender && p.external);
+  }
+
   private canResume(sender: string): boolean {
     if (!this.pausedForConsent) return true;
     const person = [...this.people.values()].find((p) => p.name === sender);
@@ -329,7 +333,9 @@ export class MeetingSession {
     if (this.status === "left") return;
     const language = this.options.language;
     if (command.intent === "approve" || command.intent === "deny") {
-      // Only meaningful while an action is waiting for a yes or no.
+      // Only meaningful while an action is waiting for a yes or no. A guest from outside the
+      // organization cannot authorize actions on its systems.
+      if (this.isKnownExternal(command.from)) return;
       this.resolveApproval(undefined, command.intent === "approve", command.from);
       return;
     }

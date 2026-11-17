@@ -1,5 +1,6 @@
 import { type Config, isLocalOnly, type LlmEngineConfig } from "@open-meetings/config";
 import { type FetchLike, guardedFetch } from "./http";
+import { withJsonToolFallback } from "./json-tools";
 import { createAnthropicLlm } from "./llm/anthropic";
 import { createOpenAiCompatibleLlm } from "./llm/openai-compatible";
 import {
@@ -10,9 +11,10 @@ import {
 import type { Engines, LlmEngine } from "./types";
 
 export function createLlm(config: LlmEngineConfig, fetchFn: FetchLike): LlmEngine {
-  return config.provider === "anthropic"
-    ? createAnthropicLlm(config, fetchFn)
-    : createOpenAiCompatibleLlm(config, fetchFn);
+  if (config.provider === "anthropic") return createAnthropicLlm(config, fetchFn);
+  const engine = createOpenAiCompatibleLlm(config, fetchFn);
+  // Models without native tool calling get tools through validated JSON answers.
+  return engine.nativeTools ? engine : withJsonToolFallback(engine);
 }
 
 /** The fetch every engine must use: enforces the local-only guarantee in one place. */
