@@ -1,13 +1,27 @@
 import { timingSafeEqual } from "node:crypto";
-import { createReadStream, existsSync, statSync } from "node:fs";
+import {
+  createReadStream,
+  createWriteStream,
+  existsSync,
+  mkdtempSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { tmpdir } from "node:os";
 import { extname, join, normalize, resolve } from "node:path";
+import { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import type { RunAgentInput } from "@ag-ui/core";
 import { EventEncoder } from "@ag-ui/encoder";
 import type { Config } from "@open-meetings/config";
 import { artifactContentSchema, type exportArtifact, type Logger } from "@open-meetings/core";
 import { handleAguiRun } from "./agui";
+import { createFileSource } from "./file-source";
 import type { MeetingManager } from "./manager";
+
+/** Recordings of long meetings are large; 2 GB covers several hours of video. */
+const MAX_UPLOAD = 2 * 1024 * 1024 * 1024;
 
 export class HttpError extends Error {
   constructor(
@@ -178,6 +192,44 @@ export function apiRouter(deps: ApiDeps): Router {
         ...(input.title ? { title: input.title } : {}),
         ...(input.platform ? { platform: input.platform } : {}),
       });
+      return { id: live.record.id, status: live.record.status };
+    })
+    .add("POST", "/api/meetings/upload", async ({ req, url }) => {
+      if (!manager.canTranscribe) {
+        throw new HttpError(
+          400,
+          "uploads need a speech-to-text engine (engines.stt in the config)",
+        );
+      }
+      const name = url.searchParams.get("filename") ?? "recording";
+      const type = req.headers["content-type"] ?? "";
+      const extension = extname(name) || (type.includes("wav") ? ".wav" : "");
+      const dir = mkdtempSync(join(tmpdir(), "om-upload-"));
+      const file = join(dir, `upload${extension}`);
+      let size = 0;
+      try {
+        await pipeline(
+          req,
+          new Transform({
+            transform(chunk: Buffer, _encoding, done) {
+              size += chunk.length;
+              done(size > MAX_UPLOAD ? new HttpError(413, "file too large") : null, chunk);
+            },
+          }),
+          createWriteStream(file),
+        );
+        if (size === 0) throw new HttpError(400, "the upload is empty");
+      } catch (error) {
+        rmSync(dir, { recursive: true, force: true });
+        throw error;
+      }
+      const title = url.searchParams.get("title") ?? name;
+      const live = manager.start({
+        source: createFileSource(file, { isWav: extension === ".wav" }),
+        title,
+        platform: "file",
+      });
+      void live.done.finally(() => rmSync(dir, { recursive: true, force: true }));
       return { id: live.record.id, status: live.record.status };
     })
     .add("GET", "/api/meetings/:id", ({ params }) => {

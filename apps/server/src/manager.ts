@@ -109,6 +109,11 @@ export class MeetingManager {
     this.tools = [...builtinTools({ webFetch }), ...(deps.tools ?? [])];
   }
 
+  /** Audio sources (uploads, the extension's tab audio) need a speech-to-text engine. */
+  get canTranscribe(): boolean {
+    return Boolean(this.deps.engines.stt);
+  }
+
   get liveMeetings(): LiveMeeting[] {
     return [...this.live.values()];
   }

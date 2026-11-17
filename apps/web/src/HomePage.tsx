@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "./api";
+import { api, withToken } from "./api";
 import { useI18n } from "./i18n";
 import { navigate, onLinkClick } from "./router";
 import type { MeetingSummary, SearchHit } from "./types";
@@ -116,6 +116,53 @@ function Search() {
   );
 }
 
+function Upload() {
+  const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const send = async (file: File) => {
+    setBusy(true);
+    setError(undefined);
+    try {
+      const query = new URLSearchParams({
+        filename: file.name,
+        title: file.name.replace(/\.[^.]+$/, ""),
+      });
+      const res = await fetch(withToken(`/api/meetings/upload?${query}`), {
+        method: "POST",
+        headers: { "content-type": file.type || "application/octet-stream" },
+        body: file,
+      });
+      const body = (await res.json()) as { id?: string; error?: string };
+      if (!res.ok || !body.id) throw new Error(body.error ?? `HTTP ${res.status}`);
+      navigate(`/meetings/${body.id}`);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card title={t.uploadTitle}>
+      <p className="mb-3 text-sm text-stone-500">{t.uploadHint}</p>
+      <label className="inline-flex cursor-pointer items-center rounded-lg border border-stone-300 px-3 py-1.5 text-sm hover:bg-stone-100 dark:border-stone-700 dark:hover:bg-stone-800">
+        {busy ? t.sending : t.chooseFile}
+        <input
+          type="file"
+          accept="audio/*,video/*"
+          className="sr-only"
+          disabled={busy}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void send(file);
+          }}
+        />
+      </label>
+      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+    </Card>
+  );
+}
+
 export function HomePage() {
   const { t, lang } = useI18n();
   const [meetings, setMeetings] = useState<MeetingSummary[]>();
@@ -156,6 +203,7 @@ export function HomePage() {
   return (
     <div className="space-y-4">
       <SendBot />
+      <Upload />
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {live.length ? <Card title={t.liveNow}>{live.map(row)}</Card> : null}
       <Card title={t.history}>

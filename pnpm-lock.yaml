@@ -140,12 +140,24 @@ importers:
       '@open-meetings/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@open-meetings/engines':
+        specifier: workspace:*
+        version: link:../../packages/engines
+      '@open-meetings/tools':
+        specifier: workspace:*
+        version: link:../../packages/tools
       '@types/ws':
         specifier: ^8.18.0
         version: 8.18.2
       tsup:
         specifier: ^8.5.0
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.33)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1)
+
+  apps/extension:
+    devDependencies:
+      '@open-meetings/bot':
+        specifier: workspace:*
+        version: link:../bot
 
   apps/server:
     dependencies:

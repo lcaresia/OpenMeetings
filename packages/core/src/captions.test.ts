@@ -1,6 +1,6 @@
-import type { TranscriptSegment } from "@open-meetings/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptionStabilizer } from "./captions";
+import type { TranscriptSegment } from "./types";
 
 describe("CaptionStabilizer", () => {
   let segments: TranscriptSegment[];

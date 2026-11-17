@@ -10,6 +10,10 @@ const pt = {
   meetingLink: "Link da reunião",
   meetingTitle: "Título (opcional)",
   send: "Enviar",
+  uploadTitle: "Processar uma gravação",
+  uploadHint:
+    "Envie o áudio ou vídeo de uma reunião que já aconteceu. Precisa de um motor de transcrição (STT) configurado.",
+  chooseFile: "Escolher arquivo",
   sending: "Enviando...",
   liveNow: "Ao vivo",
   history: "Histórico",
@@ -87,6 +91,10 @@ const en: Messages = {
   meetingLink: "Meeting link",
   meetingTitle: "Title (optional)",
   send: "Send",
+  uploadTitle: "Process a recording",
+  uploadHint:
+    "Upload the audio or video of a meeting that already happened. Needs a speech-to-text (STT) engine in the config.",
+  chooseFile: "Choose a file",
   sending: "Sending...",
   liveNow: "Live",
   history: "History",

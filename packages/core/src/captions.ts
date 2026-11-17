@@ -1,4 +1,4 @@
-import type { TranscriptSegment } from "@open-meetings/core";
+import type { TranscriptSegment } from "./types";
 
 export type StabilizerOptions = {
   /** A caption that has not changed for this long is considered final. */
