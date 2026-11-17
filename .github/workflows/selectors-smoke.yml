@@ -22,7 +22,7 @@ jobs:
       - name: Skip without a test meeting
         if: env.OM_SMOKE_MEET_URL == ''
         run: echo "OM_SMOKE_MEET_URL is not set; nothing to check."
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: env.OM_SMOKE_MEET_URL != ''
       - uses: pnpm/action-setup@v4
         if: env.OM_SMOKE_MEET_URL != ''
