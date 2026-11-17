@@ -9,6 +9,7 @@ import { createLogger, type Engines, type Logger } from "@open-meetings/core";
 import { createEngines, type FetchLike } from "@open-meetings/engines";
 import { connectMcpServers, type Tool } from "@open-meetings/tools";
 import { BotHub } from "./bot-hub";
+import { attachCaptureHub } from "./capture-hub";
 import { runDoctor } from "./cli/doctor";
 import { createRequestHandler, type Router } from "./http";
 import { MeetingManager } from "./manager";
@@ -123,6 +124,11 @@ export async function startApp(loaded: LoadedConfig, options: AppOptions = {}): 
   });
   const server = createServer((req, res) => void handler(req, res));
   if (!options.noBot) hub.attach(server);
+  const closeCapture = attachCaptureHub(server, {
+    manager,
+    logger,
+    ...(config.server.authToken ? { token: config.server.authToken } : {}),
+  });
 
   await new Promise<void>((resolveListen) =>
     server.listen(options.port ?? config.server.port, config.server.host, resolveListen),
@@ -147,6 +153,7 @@ export async function startApp(loaded: LoadedConfig, options: AppOptions = {}): 
       clearInterval(retention);
       await manager.shutdown();
       hub.close();
+      closeCapture();
       worker?.kill("SIGTERM");
       await mcp.close();
       await new Promise((resolveClose) => server.close(resolveClose));

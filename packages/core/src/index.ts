@@ -1,6 +1,7 @@
 export * from "./artifacts";
 export * from "./async-queue";
 export * from "./bot-protocol";
+export * from "./captions";
 export * from "./commands";
 export * from "./constants";
 export * from "./fixture";

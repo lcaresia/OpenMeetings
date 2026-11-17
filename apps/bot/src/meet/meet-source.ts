@@ -1,13 +1,13 @@
 import {
   AsyncQueue,
   type BotJoinOptions,
+  CaptionStabilizer,
   type CaptureEvent,
   type CaptureSource,
   type MeetingRef,
   type Participant,
 } from "@open-meetings/core";
 import { type Browser, type BrowserContext, chromium, type Page } from "playwright";
-import { CaptionStabilizer } from "./captions";
 import {
   AUDIO_SCRIPT,
   OBSERVER_SCRIPT,

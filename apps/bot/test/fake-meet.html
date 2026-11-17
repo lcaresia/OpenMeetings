@@ -89,12 +89,19 @@
     $("input").value = "";
   });
 
-  // ?autoplay=1 plays a short meeting on its own once the bot is in the call and watching,
-  // for end-to-end tests where nobody can drive the page.
+  // ?incall=1 opens straight in the call, as a person who already joined (extension mode).
+  if (params.get("incall")) {
+    $("lobby").hidden = true;
+    $("call").hidden = false;
+    $("chat").hidden = false;
+  }
+
+  // ?autoplay=1 plays a short meeting on its own once something is watching the page
+  // (the bot, or the extension's content script), for end-to-end tests nobody drives.
   if (params.get("autoplay")) {
     const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     (async () => {
-      while (!window.__omObserver) await wait(100);
+      while (!window.__omObserver && !document.documentElement.dataset.omObserver) await wait(100);
       fakeMeet.join("ana", "Ana Souza");
       await wait(500);
       const block = fakeMeet.speak("Ana Souza");

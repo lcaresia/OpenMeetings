@@ -1,5 +1,5 @@
 import { parseConfig } from "@open-meetings/config";
-import type { EmbedEngine, Engines, LlmEngine } from "@open-meetings/core";
+import type { EmbedEngine, Engines, LlmEngine, SttEngine } from "@open-meetings/core";
 import { createRuleLlm } from "@open-meetings/core/testing";
 import type { FetchLike } from "@open-meetings/engines";
 import type { Tool } from "@open-meetings/tools";
@@ -33,7 +33,32 @@ export type TestAppOptions = {
   tools?: Tool[];
   fetch?: FetchLike;
   embed?: boolean;
+  stt?: SttEngine;
 };
+
+/** Transcribes every window as a numbered line, and records the windows it got. */
+export function fakeStt() {
+  const windows: { startMs: number; seconds: number; sampleRate: number }[] = [];
+  const engine: SttEngine & { windows: typeof windows } = {
+    model: "fake-stt",
+    windows,
+    async transcribe(chunk) {
+      const seconds = chunk.pcm.length / chunk.sampleRate;
+      windows.push({ startMs: chunk.startMs, seconds, sampleRate: chunk.sampleRate });
+      return [
+        {
+          id: `stt-${windows.length}`,
+          speaker: "unknown",
+          text: `Trecho ${windows.length} transcrito.`,
+          startMs: chunk.startMs,
+          endMs: chunk.startMs + Math.round(seconds * 1000),
+          source: "stt",
+        },
+      ];
+    },
+  };
+  return engine;
+}
 
 /** A real server on a free port, with deterministic models and an in-memory database. */
 export async function startTestApp(
@@ -55,6 +80,7 @@ agent: { language: pt-BR, summaryIntervalSec: 45 }
   const engines: Engines = {
     llm: { fast, smart: options.smart ?? fast },
     ...(options.embed === false ? {} : { embed: fakeEmbed() }),
+    ...(options.stt ? { stt: options.stt } : {}),
   };
   const app = await startApp(loaded, {
     engines,

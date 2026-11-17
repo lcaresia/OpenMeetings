@@ -1,0 +1,14 @@
+{
+  "name": "@open-meetings/extension",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsx build.ts",
+    "zip": "tsx build.ts --zip"
+  },
+  "devDependencies": {
+    "@open-meetings/bot": "workspace:*"
+  }
+}

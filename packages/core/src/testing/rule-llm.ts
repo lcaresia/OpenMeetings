@@ -40,7 +40,8 @@ function stateUpdate(req: ChatRequest): string {
     const cite = { sourceSegmentIds: [line.id] };
     const assigned = ASSIGNED.exec(line.text);
     const taken = TAKEN.exec(line.text);
-    if (DECISION.test(line.text)) {
+    // A question about decisions is not a decision.
+    if (DECISION.test(line.text) && !line.text.trim().endsWith("?")) {
       ops.push({
         op: "add",
         path: "/decisions/-",
