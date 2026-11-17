@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Open Meetings",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Captures the meeting in this tab (no bot joins the call) and sends it to your Open Meetings server.",
   "minimum_chrome_version": "116",
   "permissions": [

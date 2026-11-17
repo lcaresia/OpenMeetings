@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/lcaresia/OpenMeetings/compare/v0.1.0...v0.1.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **bot:** give the ESM bundle a require for inlined CommonJS dependencies ([5ecdda3](https://github.com/lcaresia/OpenMeetings/commit/5ecdda3874d17373ad765048fa1dcf48d8efacdf))
+
 ## [0.1.0](https://github.com/lcaresia/OpenMeetings/compare/v0.0.1...v0.1.0) (2026-11-17)
 
 
