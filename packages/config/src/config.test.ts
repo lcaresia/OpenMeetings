@@ -80,6 +80,13 @@ describe("examples", () => {
     const { config } = parseConfig(readFileSync(join(examplesDir, file), "utf8"), ENV);
     expect(config.profile).toBe(file.replace(".yaml", ""));
   });
+
+  // The container images set OM_DB_PATH; profiles without a `storage` section must still load.
+  it.each(files)("%s is valid with the container environment", (file) => {
+    const env = { ...ENV, OM_HOST: "0.0.0.0", OM_DB_PATH: "/data/openmeetings.db" };
+    const { config } = parseConfig(readFileSync(join(examplesDir, file), "utf8"), env);
+    expect(config.storage).toMatchObject({ driver: "sqlite", path: "/data/openmeetings.db" });
+  });
 });
 
 describe("isLocalUrl", () => {

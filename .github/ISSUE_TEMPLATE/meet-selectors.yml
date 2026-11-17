@@ -1,0 +1,43 @@
+name: Google Meet changed (bot broken)
+description: The bot cannot join, read captions, read or write the chat, or leave.
+labels: [meet-selectors]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Meet changes its page often. Every selector the bot uses is in
+        `apps/bot/src/meet/selectors.ts`, so a fix is usually a few lines there.
+        `pnpm --filter @open-meetings/bot smoke` (with `OM_SMOKE_MEET_URL`) checks the pre-join page.
+  - type: dropdown
+    id: step
+    attributes:
+      label: What fails
+      options:
+        - Entering the name / clicking join
+        - Detecting admission (stays waiting)
+        - Turning captions on
+        - Reading captions (no transcript)
+        - Reading the chat
+        - Writing in the chat
+        - Participants
+        - Leaving
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: Meet interface language and account type
+      description: e.g. English, guest join / Google Workspace account
+  - type: textarea
+    id: dom
+    attributes:
+      label: What the element looks like now
+      description: |
+        In the call, right click the element > Inspect, and paste its outer HTML (remove names
+        and anything private). An aria-label or visible text is the most useful part.
+      render: html
+  - type: textarea
+    id: logs
+    attributes:
+      label: Bot log
+      render: text

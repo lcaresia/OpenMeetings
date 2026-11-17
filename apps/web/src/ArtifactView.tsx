@@ -203,10 +203,11 @@ function TimelineView({
   return (
     <div className="space-y-1.5 text-sm">
       <div className="relative ml-48 h-5 text-[10px] text-stone-500">
-        {ticks.map((tick) => (
+        {ticks.map((tick, i) => (
           <span
             key={tick}
-            className="absolute -translate-x-1/2"
+            // The first and last labels align inward so they never spill out of the chart.
+            className={`absolute whitespace-nowrap ${i === 0 ? "" : i === ticks.length - 1 ? "-translate-x-full" : "-translate-x-1/2"}`}
             style={{ left: `${((tick - first) / span) * 100}%` }}
           >
             {label(tick)}

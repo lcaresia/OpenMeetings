@@ -9,7 +9,6 @@ import { useMeeting } from "./useMeeting";
 
 function Transcript({ segments, focus }: { segments: Segment[]; focus?: string }) {
   const { t } = useI18n();
-  const end = useRef<HTMLDivElement>(null);
   const follow = useRef(true);
   const box = useRef<HTMLDivElement>(null);
 
@@ -18,7 +17,9 @@ function Transcript({ segments, focus }: { segments: Segment[]; focus?: string }
   useEffect(() => {
     // Follows new lines (and partial captions growing) unless the reader scrolled up.
     if (count && lastText !== undefined && follow.current && !focus) {
-      end.current?.scrollIntoView({ block: "end" });
+      // Scroll the transcript box only; scrollIntoView would move the whole page too.
+      const el = box.current;
+      if (el) el.scrollTop = el.scrollHeight;
     }
   }, [count, lastText, focus]);
   useEffect(() => {
@@ -53,7 +54,6 @@ function Transcript({ segments, focus }: { segments: Segment[]; focus?: string }
           <p className="text-[15px] leading-relaxed">{segment.text}</p>
         </div>
       ))}
-      <div ref={end} />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { loadConfig } from "@open-meetings/config";
 import { loadFixture, type MeetingState, replayFixture } from "@open-meetings/core";
 import { createRuleLlm } from "@open-meetings/core/testing";
@@ -36,7 +37,7 @@ export function formatState(state: MeetingState): string {
 
 /** `om replay <fixture>`: runs a recorded meeting through the pipeline and prints the result. */
 export async function runReplay(fixtureName: string, options: ReplayOptions): Promise<string> {
-  const fixture = loadFixture(fixtureName);
+  const fixture = loadFixture(fixtureName, "fixtures", join(import.meta.dirname, "fixtures"));
   let llm: Parameters<typeof replayFixture>[1];
   let promptOverrides: Record<string, string> | undefined;
   if (options.mock) {

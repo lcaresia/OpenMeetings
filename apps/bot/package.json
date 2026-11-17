@@ -10,7 +10,7 @@
     "smoke": "tsx src/smoke.ts"
   },
   "dependencies": {
-    "playwright": "^1.65.0",
+    "playwright": "1.65.1",
     "ws": "^8.23.0"
   },
   "devDependencies": {

@@ -112,6 +112,15 @@ importers:
       '@biomejs/biome':
         specifier: 2.6.8
         version: 2.6.8
+      '@open-meetings/config':
+        specifier: workspace:*
+        version: link:packages/config
+      '@open-meetings/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@open-meetings/engines':
+        specifier: workspace:*
+        version: link:packages/engines
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.5
@@ -128,7 +137,7 @@ importers:
   apps/bot:
     dependencies:
       playwright:
-        specifier: ^1.65.0
+        specifier: 1.65.1
         version: 1.65.1
       ws:
         specifier: ^8.23.0

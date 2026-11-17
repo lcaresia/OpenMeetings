@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "packages": {
+    "apps/server": {
+      "package-name": "open-meetings",
+      "changelog-path": "../../CHANGELOG.md",
+      "extra-files": [
+        { "type": "generic", "path": "../../packages/core/src/constants.ts" },
+        { "type": "json", "path": "../extension/src/manifest.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "../bot/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "../web/package.json", "jsonpath": "$.version" }
+      ]
+    }
+  }
+}

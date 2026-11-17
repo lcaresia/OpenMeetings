@@ -1,0 +1,40 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Steps, the command you ran, and (if you can) a fixture or `om replay` that shows it.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `om --version`, or the image tag.
+    validations:
+      required: true
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Profile
+      options: [local, cloud-cheap, cloud-best, hybrid, custom]
+  - type: textarea
+    id: doctor
+    attributes:
+      label: om doctor
+      description: Output of `om doctor` (API keys are never printed, but check before pasting).
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant server or bot log lines. Remove meeting content you do not want public.
+      render: text

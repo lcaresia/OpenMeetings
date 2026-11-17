@@ -1,0 +1,20 @@
+# NVIDIA GPU for the local models. Needs the NVIDIA Container Toolkit on the host.
+#   docker compose -f docker-compose.yml -f docker/compose.gpu.yml --profile local up
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

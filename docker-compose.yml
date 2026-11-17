@@ -1,0 +1,89 @@
+# Open Meetings
+#
+#   docker compose up                    server + bot, models through APIs (keys in .env)
+#   docker compose --profile local up    + Ollama and Speaches: nothing leaves the machine,
+#                                          no API key needed (first start downloads ~15 GB)
+#
+# With an NVIDIA GPU add: -f docker-compose.yml -f docker/compose.gpu.yml
+# The panel is at http://localhost:4319 (published on localhost only; see docs/deploy-vps.md).
+
+name: open-meetings
+
+x-keys: &keys
+  GROQ_API_KEY: ${GROQ_API_KEY:-}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OM_WEBHOOK_URL: ${OM_WEBHOOK_URL:-}
+
+services:
+  server:
+    image: ${OM_SERVER_IMAGE:-ghcr.io/open-meetings/open-meetings-server:latest}
+    build: { context: ., dockerfile: docker/server.Dockerfile }
+    restart: unless-stopped
+    ports: ["127.0.0.1:${OM_PORT:-4319}:4319"]
+    environment:
+      <<: *keys
+      OM_CONFIG: ${OM_CONFIG:-}
+      OM_AUTH_TOKEN: ${OM_AUTH_TOKEN:-}
+      OM_BOT_SPAWN: "false"
+      OM_BOT_TOKEN: ${OM_BOT_TOKEN:-change-this-bot-token}
+      OLLAMA_URL: http://ollama:11434/v1
+      STT_URL: http://speaches:8000/v1
+    volumes:
+      - om-data:/data
+      # Your own config instead of the bundled profiles:
+      # - ./openmeetings.config.yaml:/app/openmeetings.config.yaml:ro
+
+  bot:
+    image: ${OM_BOT_IMAGE:-ghcr.io/open-meetings/open-meetings-bot:latest}
+    build: { context: ., dockerfile: docker/bot.Dockerfile }
+    restart: unless-stopped
+    depends_on: [server]
+    shm_size: 1gb
+    environment:
+      OM_SERVER_WS: ws://server:4319/bot
+      OM_BOT_TOKEN: ${OM_BOT_TOKEN:-change-this-bot-token}
+    # A dedicated Google account (Playwright storageState) avoids guest-join refusals:
+    # volumes: ["./storageState.json:/app/storageState.json:ro"]
+
+  ollama:
+    profiles: [local]
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes: [ollama:/root/.ollama]
+
+  # Downloads the local models once; later starts find them in the volume.
+  ollama-pull:
+    profiles: [local]
+    image: ollama/ollama:latest
+    depends_on: [ollama]
+    environment: { OLLAMA_HOST: "ollama:11434" }
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        until ollama list >/dev/null 2>&1; do sleep 2; done;
+        ollama pull qwen2.5:7b && ollama pull qwen2.5:14b && ollama pull nomic-embed-text
+    restart: "no"
+
+  speaches:
+    profiles: [local]
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
+    restart: unless-stopped
+    volumes: [speaches:/home/ubuntu/.cache/huggingface/hub]
+
+  # Speaches does not download a model on first use; this asks for it once.
+  speaches-pull:
+    profiles: [local]
+    image: curlimages/curl:latest
+    depends_on: [speaches]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        until curl -sf http://speaches:8000/health >/dev/null; do sleep 2; done;
+        curl -sf -X POST http://speaches:8000/v1/models/Systran/faster-whisper-small && echo downloaded
+    restart: "no"
+
+volumes:
+  om-data:
+  ollama:
+  speaches:

@@ -131,7 +131,9 @@ function dueDate(due: string | undefined, today: string, fallbackDays: number): 
 function agentTurn(req: ChatRequest): AgentTurn {
   const last = req.messages.at(-1);
   if (last?.role === "tool") {
-    return { text: last.isError ? `Não consegui: ${last.content}` : `Pronto. ${last.content}` };
+    if (last.isError) return { text: `Não consegui: ${last.content}` };
+    const title = /"([^"]+)"/.exec(last.content)?.[1];
+    return { text: title ? `Pronto: "${title}" está no painel.` : "Pronto." };
   }
   const user = req.messages.findLast((message) => message.role === "user")?.content ?? "";
   const system = req.messages.find((message) => message.role === "system")?.content ?? "";
