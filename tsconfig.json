@@ -5,6 +5,7 @@
     "apps/server/src",
     "apps/bot/src",
     "apps/extension/build.ts",
+    "scripts/*.ts",
     "vitest.config.ts"
   ]
 }

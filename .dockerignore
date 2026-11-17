@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+data
+.git
+.github
+coverage
+playwright-report
+test-results
+*.zip
+.env
+.env.*
+openmeetings.config.yaml
+storageState*.json

@@ -26,6 +26,32 @@ export type LoadedConfig = {
 
 type Env = Record<string, string | undefined>;
 
+/**
+ * Deployment settings that belong to the environment rather than to the shared config file
+ * (containers, VPS). They win over the file.
+ */
+export const ENV_OVERRIDES: Record<string, [section: string, key: string, kind?: "boolean"]> = {
+  OM_HOST: ["server", "host"],
+  OM_PORT: ["server", "port"],
+  OM_AUTH_TOKEN: ["server", "authToken"],
+  OM_DB_PATH: ["storage", "path"],
+  OM_BOT_SPAWN: ["bot", "spawn", "boolean"],
+  OM_BOT_TOKEN: ["bot", "token"],
+  OM_BOT_HEADLESS: ["bot", "headless", "boolean"],
+};
+
+function applyEnvOverrides(config: Record<string, unknown>, env: Env): void {
+  for (const [name, [section, key, kind]] of Object.entries(ENV_OVERRIDES)) {
+    const value = env[name];
+    if (value === undefined || value === "") continue;
+    config[section] ??= {};
+    const target = config[section] as Record<string, unknown>;
+    target[key] = kind === "boolean" ? !/^(0|false|no|off)$/i.test(value) : value;
+    // A database file path means SQLite; without this a file with no `storage` section fails.
+    if (name === "OM_DB_PATH") target.driver ??= "sqlite";
+  }
+}
+
 export function parseConfig(yamlText: string, env: Env = process.env): LoadedConfig {
   const { masked, refs } = maskEnvRefs(yamlText);
   let raw: unknown;
@@ -36,6 +62,7 @@ export function parseConfig(yamlText: string, env: Env = process.env): LoadedCon
   }
   const missing = new Set<string>();
   const resolved = resolveEnvRefs(raw ?? {}, refs, env, missing);
+  applyEnvOverrides(resolved as Record<string, unknown>, env);
   const result = configSchema.safeParse(resolved);
   const missingEnv = [...missing].sort();
   if (!result.success) {

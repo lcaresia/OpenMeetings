@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { existsSync } from "node:fs";
+import { join as joinPath } from "node:path";
 import { parseArgs } from "node:util";
 import { ConfigError, loadConfig, parseConfig } from "@open-meetings/config";
 import {
@@ -18,6 +20,7 @@ const HELP = `${PROJECT_NAME} ${VERSION}
 Usage: ${CLI_NAME} <command> [options]
 
 Commands:
+  init                Create openmeetings.config.yaml and .env (asks a few questions)
   serve               Start the server and the web panel
   join <link>         Send the bot to a meeting (needs a running server)
   acp                 Run as an ACP agent over stdio (for OpenBot, Zed...; needs a running server)
@@ -29,6 +32,9 @@ Options:
       --server <url>    join, acp: server address (default: $OM_SERVER_URL or the config)
       --token <token>   join, acp: server token (default: $OM_AUTH_TOKEN or the config)
       --title <text>    join: meeting title
+      --profile <name>  init: local, cloud-cheap, cloud-best or hybrid
+  -y, --yes             init: no questions, defaults for the rest
+      --force           init: overwrite existing files
       --json            Machine-readable output
       --offline         doctor: skip the engine connection tests
       --mock            replay, serve: use the built-in deterministic model (no config, no network)
@@ -70,7 +76,12 @@ storage: { driver: sqlite, path: ./data/demo.db }`,
     `${PROJECT_NAME} no ar: abra ${app.url}`,
   );
   if (options.demo) {
-    const fixture = loadFixture(options.demo);
+    // ./fixtures in a checkout; the copy bundled with the CLI otherwise.
+    const fixture = loadFixture(
+      options.demo,
+      "fixtures",
+      joinPath(import.meta.dirname, "fixtures"),
+    );
     const source = new FixtureSource(fixture, { speed: options.speed ?? 1 });
     const live = app.manager.start({
       source,
@@ -145,6 +156,9 @@ async function main(argv: string[]): Promise<number> {
       server: { type: "string" },
       token: { type: "string" },
       title: { type: "string" },
+      profile: { type: "string" },
+      yes: { type: "boolean", short: "y", default: false },
+      force: { type: "boolean", default: false },
       json: { type: "boolean", default: false },
       offline: { type: "boolean", default: false },
       mock: { type: "boolean", default: false },
@@ -172,6 +186,14 @@ async function main(argv: string[]): Promise<number> {
         ...(values.demo ? { demo: values.demo } : {}),
         ...(values.speed ? { speed: Number(values.speed) } : {}),
       });
+    case "init": {
+      const { runInit } = await import("./init");
+      return runInit({
+        yes: values.yes,
+        force: values.force,
+        ...(values.profile ? { profile: values.profile } : {}),
+      });
+    }
     case "acp": {
       // stdout carries the protocol: nothing else may be printed there.
       const { createAcpAgent } = await import("../acp-agent");
@@ -219,6 +241,9 @@ async function main(argv: string[]): Promise<number> {
       return 1;
   }
 }
+
+// Keys and tokens from ./.env, as written by `om init`. Variables already set win.
+if (existsSync(".env")) process.loadEnvFile(".env");
 
 main(process.argv.slice(2)).then(
   (code) => {

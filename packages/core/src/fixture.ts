@@ -36,11 +36,12 @@ export const fixtureSchema = z.object({
 export type Fixture = z.infer<typeof fixtureSchema>;
 
 /** Accepts a fixture name (`weekly-sync`), a directory, or a path to `captions.json`. */
-export function loadFixture(nameOrPath: string, fixturesDir = "fixtures"): Fixture {
+export function loadFixture(nameOrPath: string, ...fixturesDirs: string[]): Fixture {
+  const dirs = fixturesDirs.length ? fixturesDirs : ["fixtures"];
   const candidates = [
     nameOrPath,
     join(nameOrPath, "captions.json"),
-    join(fixturesDir, nameOrPath, "captions.json"),
+    ...dirs.map((dir) => join(dir, nameOrPath, "captions.json")),
   ].map((path) => resolve(path));
   const file = candidates.find((path) => existsSync(path) && path.endsWith(".json"));
   if (!file) throw new Error(`Fixture not found: ${nameOrPath}`);

@@ -1,0 +1,19 @@
+name: Feature request
+description: Something Open Meetings should do.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do in or after a meeting, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead

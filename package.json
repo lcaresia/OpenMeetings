@@ -13,10 +13,16 @@
     "test": "vitest run",
     "build": "pnpm -r --if-present build",
     "om": "tsx apps/server/src/cli/main.ts",
+    "eval": "tsx scripts/eval.ts",
+    "bench": "tsx scripts/bench.ts",
+    "notices": "node scripts/notices.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.8",
+    "@open-meetings/config": "workspace:*",
+    "@open-meetings/core": "workspace:*",
+    "@open-meetings/engines": "workspace:*",
     "@types/node": "^22.10.0",
     "tsx": "^4.19.0",
     "typescript": "^5.9.0",
