@@ -46,6 +46,6 @@
     "@open-meetings/web": "workspace:*",
     "@types/ws": "^8.18.2",
     "openai": "7.57.0",
-    "tsup": "^8.5.0"
+    "tsup": "^9.0.0"
   }
 }
