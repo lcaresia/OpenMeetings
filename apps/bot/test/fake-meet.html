@@ -1,0 +1,122 @@
+<!doctype html>
+<!--
+  A stand-in for Google Meet, for tests only. It reproduces the DOM facts the bot relies on
+  (aria-labels, data attributes, caption block structure), as documented in
+  docs/research/2026-11-16-meet-dom-and-licenses.md. It is not a copy of Meet's markup.
+  Query parameters: ?deny=1 refuses admission; ?admitMs=N delays it.
+-->
+<html lang="en">
+<head><meta charset="utf-8"><title>Meet</title></head>
+<body>
+<div id="lobby">
+  <input type="text" aria-label="Your name">
+  <div role="button" aria-label="Turn off microphone" id="mic">mic</div>
+  <div role="button" aria-label="Turn off camera" id="cam">cam</div>
+  <button id="join"><span>Ask to join</span></button>
+</div>
+<div id="status"></div>
+<div id="call" hidden>
+  <div id="tiles">
+    <div data-participant-id="self" data-self-name="me"><span class="notranslate">You</span></div>
+  </div>
+  <button aria-label="Turn on captions" id="cc">CC</button>
+  <button data-panel-id="2" aria-label="Chat with everyone" id="chatbtn">Chat</button>
+  <button aria-label="Leave call" id="leave">Leave</button>
+  <div role="region" tabindex="0" aria-label="Captions" id="captions" hidden>
+    <div class="wrap" id="blocks"></div>
+    <div><button>Jump to bottom</button></div>
+  </div>
+  <aside id="chat" hidden>
+    <div role="list" aria-live="polite" id="messages"></div>
+    <textarea aria-label="Send a message" id="input"></textarea>
+  </aside>
+</div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const $ = (id) => document.getElementById(id);
+  let blockCount = 0;
+  let messageCount = 0;
+  const state = { name: "", hl: params.get("hl"), sent: [] };
+
+  const toggle = (el, on, off) => el.addEventListener("click", () => {
+    el.setAttribute("aria-label", el.getAttribute("aria-label") === on ? off : on);
+  });
+  toggle($("mic"), "Turn off microphone", "Turn on microphone");
+  toggle($("cam"), "Turn off camera", "Turn on camera");
+
+  $("join").addEventListener("click", () => {
+    state.name = document.querySelector('input[aria-label="Your name"]').value;
+    $("lobby").hidden = true;
+    $("status").textContent = "Asking to be let in...";
+    setTimeout(() => {
+      if (params.get("deny")) {
+        $("status").textContent = "Someone in the call denied your request to join";
+        return;
+      }
+      $("status").textContent = "";
+      $("call").hidden = false;
+    }, Number(params.get("admitMs") || 200));
+  });
+
+  $("cc").addEventListener("click", () => {
+    const on = $("cc").getAttribute("aria-label") === "Turn on captions";
+    $("cc").setAttribute("aria-label", on ? "Turn off captions" : "Turn on captions");
+    $("captions").hidden = !on;
+  });
+  $("chatbtn").addEventListener("click", () => { $("chat").hidden = false; });
+  $("leave").addEventListener("click", () => {
+    $("call").hidden = true;
+    $("status").textContent = "You left the meeting";
+  });
+
+  const addMessage = (sender, text) => {
+    const group = document.createElement("div");
+    group.setAttribute("data-sender-name", sender);
+    const message = document.createElement("div");
+    message.setAttribute("data-message-id", "m" + ++messageCount);
+    const body = document.createElement("div");
+    body.setAttribute("jsname", "dTKtvb");
+    body.textContent = text;
+    message.append(body);
+    group.append(message);
+    $("messages").append(group);
+  };
+  $("input").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    state.sent.push($("input").value);
+    addMessage("You", $("input").value);
+    $("input").value = "";
+  });
+
+  // Test hooks.
+  window.fakeMeet = {
+    state,
+    join(id, name) {
+      const tile = document.createElement("div");
+      tile.setAttribute("data-participant-id", id);
+      tile.innerHTML = '<div><span class="notranslate"></span></div>';
+      tile.querySelector("span").textContent = name;
+      $("tiles").append(tile);
+    },
+    leave(id) { document.querySelector('[data-participant-id="' + id + '"]')?.remove(); },
+    /** Starts a caption block and returns its handle; `say` rewrites it in place. */
+    speak(speaker) {
+      const block = document.createElement("div");
+      block.id = "b" + ++blockCount;
+      block.innerHTML = '<div class="who"><img alt=""><span></span></div><div class="what"><span></span></div>';
+      block.querySelector(".who span").textContent = speaker;
+      $("blocks").append(block);
+      return block.id;
+    },
+    say(blockId, text) { document.querySelector("#" + blockId + " .what span").textContent = text; },
+    drop(blockId) { $(blockId)?.remove(); },
+    chat(sender, text) { addMessage(sender, text); },
+    end() {
+      $("call").hidden = true;
+      $("status").textContent = "Your host ended the meeting for everyone";
+    },
+  };
+</script>
+</body>
+</html>

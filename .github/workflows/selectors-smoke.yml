@@ -1,0 +1,63 @@
+name: Meet selectors smoke
+
+# Google Meet changes its DOM without notice. Once a day this opens a test meeting (never
+# joining it) and checks that the pre-join selectors in apps/bot/src/meet/selectors.ts still
+# match. It needs the repository secret OM_SMOKE_MEET_URL; without it the job is skipped.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      OM_SMOKE_MEET_URL: ${{ secrets.OM_SMOKE_MEET_URL }}
+    steps:
+      - name: Skip without a test meeting
+        if: env.OM_SMOKE_MEET_URL == ''
+        run: echo "OM_SMOKE_MEET_URL is not set; nothing to check."
+      - uses: actions/checkout@v4
+        if: env.OM_SMOKE_MEET_URL != ''
+      - uses: pnpm/action-setup@v4
+        if: env.OM_SMOKE_MEET_URL != ''
+      - uses: actions/setup-node@v4
+        if: env.OM_SMOKE_MEET_URL != ''
+        with:
+          node-version: 22
+          cache: pnpm
+      - if: env.OM_SMOKE_MEET_URL != ''
+        run: pnpm install --frozen-lockfile
+      - if: env.OM_SMOKE_MEET_URL != ''
+        run: pnpm --filter @open-meetings/bot exec playwright install --with-deps chromium
+      - name: Check selectors
+        id: smoke
+        if: env.OM_SMOKE_MEET_URL != ''
+        run: pnpm --filter @open-meetings/bot smoke | tee smoke.json
+      - name: Open an issue when selectors break
+        if: failure() && env.OM_SMOKE_MEET_URL != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "Meet selectors smoke test failed";
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, state: "open", labels: "meet-selectors",
+            });
+            if (open.some((issue) => issue.title === title)) return;
+            let report = "";
+            try { report = require("fs").readFileSync("smoke.json", "utf8"); } catch {}
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              labels: ["meet-selectors"],
+              body: [
+                `The daily check of apps/bot/src/meet/selectors.ts failed: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                "", "```json", report.slice(0, 6000), "```",
+              ].join("\n"),
+            });
