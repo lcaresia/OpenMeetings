@@ -11,5 +11,8 @@
     "@open-meetings/config": "workspace:*",
     "@open-meetings/core": "workspace:*",
     "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "@open-meetings/engines": "workspace:*"
   }
 }
