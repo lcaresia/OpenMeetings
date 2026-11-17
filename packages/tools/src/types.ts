@@ -17,6 +17,8 @@ export type MeetingSearch = (query: string, limit: number) => Promise<SearchHit[
 export type ToolContext = {
   session: MeetingSession;
   runId: string;
+  /** Id of the model's tool call being run. */
+  callId: string;
   artifacts: ArtifactStore;
   search?: MeetingSearch;
   fetch?: typeof fetch;

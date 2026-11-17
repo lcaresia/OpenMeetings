@@ -102,6 +102,8 @@ export class MeetingManager {
   private readonly listeners = new Map<string, Set<(event: ManagerEvent) => void>>();
   private readonly fetchFn: FetchLike;
   private readonly tools: Tool[];
+  /** Tools a client declared for one command (AG-UI frontend tools), by command id. */
+  private readonly commandTools = new Map<string, Tool[]>();
 
   constructor(private readonly deps: ManagerDeps) {
     this.fetchFn = engineFetch(deps.config, deps.fetch);
@@ -260,6 +262,7 @@ export class MeetingManager {
       fetch: this.fetchFn as typeof fetch,
       maxSteps: config.agent.maxToolSteps,
       promptOverrides: config.prompts,
+      toolsFor: (command) => (command.id ? (this.commandTools.get(command.id) ?? []) : []),
     });
     const session = new MeetingSession(
       source,
@@ -446,11 +449,17 @@ export class MeetingManager {
   async command(
     id: string,
     text: string,
-    options: { from?: string; commandId?: string } = {},
+    options: { from?: string; commandId?: string; tools?: Tool[] } = {},
   ): Promise<void> {
     const live = this.live.get(id);
     if (!live) throw new Error("meeting is not live");
-    await live.session.submit(text, options.from ?? "panel", options.commandId);
+    const commandId = options.commandId ?? (options.tools ? randomUUID() : undefined);
+    if (commandId && options.tools?.length) this.commandTools.set(commandId, options.tools);
+    try {
+      await live.session.submit(text, options.from ?? "panel", commandId);
+    } finally {
+      if (commandId) this.commandTools.delete(commandId);
+    }
   }
 
   resolveApproval(id: string, approvalId: string, approved: boolean, by = "panel"): boolean {

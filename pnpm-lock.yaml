@@ -167,6 +167,9 @@ importers:
       '@ag-ui/encoder':
         specifier: 1.0.4
         version: 1.0.4(zod@4.6.7)
+      '@agentclientprotocol/sdk':
+        specifier: 2.7.0
+        version: 2.7.0(zod@4.6.7)
       '@anthropic-ai/sdk':
         specifier: ^1.9.0
         version: 1.9.0(zod@4.6.7)
@@ -295,6 +298,9 @@ importers:
 
   packages/tools:
     dependencies:
+      '@agentclientprotocol/sdk':
+        specifier: 2.7.0
+        version: 2.7.0(zod@4.6.7)
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.0
         version: 1.32.2(zod@4.6.7)
@@ -336,6 +342,15 @@ packages:
     resolution: {integrity: sha512-+OAa2w1ELijSwNgNGvMDCIx5rFO+1NQDpwzoq1oXwE4L0qWciZnhIisocVzAKjtH7Ac/ONSyYR1t4qG3kMzRkw==}
     peerDependencies:
       zod: ^3.25.18 || ^4.0.0
+
+  '@agentclientprotocol/sdk@2.7.0':
+    resolution: {integrity: sha512-oXdQq0plWv3iOg01zJghNZRSuyWeMYxOgWIaSdwg1BZe2ZAC9LRhNDi023lNYxXq1zVIpQjIp8P6AfsxpvxF6g==}
+    peerDependencies:
+      '@modelcontextprotocol/server': ^2.4.0
+      zod: ^3.25.76 || ^4.0.0
+    peerDependenciesMeta:
+      '@modelcontextprotocol/server':
+        optional: true
 
   '@anthropic-ai/sdk@1.9.0':
     resolution: {integrity: sha512-xDu4za3B+rK+5ZI8wLLoosiIuwi1ktZk/3L3KKNahwO50O34H+622hly8JdXzaEerLQDhsqwVzp81Nrw80BYHg==}
@@ -2196,6 +2211,10 @@ snapshots:
       '@ag-ui/core': 1.0.4(zod@4.6.7)
       '@bufbuild/protobuf': 2.17.0
       '@protobuf-ts/protoc': 2.11.1
+      zod: 4.6.7
+
+  '@agentclientprotocol/sdk@2.7.0(zod@4.6.7)':
+    dependencies:
       zod: 4.6.7
 
   '@anthropic-ai/sdk@1.9.0(zod@4.6.7)':

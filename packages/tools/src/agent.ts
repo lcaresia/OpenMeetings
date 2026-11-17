@@ -21,6 +21,8 @@ export type AgentOptions = {
   fetch?: typeof fetch;
   /** Upper bound on model turns for one request. */
   maxSteps: number;
+  /** Extra tools for one request (declared by the client that sent it). */
+  toolsFor?: (command: Command) => Tool[];
   /** How much recent transcript the model gets, in characters. */
   transcriptChars?: number;
   promptOverrides?: Record<string, string>;
@@ -55,13 +57,11 @@ function recentTranscript(session: MeetingSession, maxChars: number): string {
  * outside the meeting waits for a person's confirmation first.
  */
 export function createAgent(options: AgentOptions): AgentRunner {
-  const byName = new Map(options.tools.map((tool) => [tool.name, tool]));
-  const defs = options.tools.map(toToolDef);
-
   async function execute(
     call: ToolCall,
     session: MeetingSession,
     runId: string,
+    byName: Map<string, Tool>,
   ): Promise<ToolResult> {
     const tool = byName.get(call.name);
     if (!tool) return { content: `Unknown tool: ${call.name}`, isError: true };
@@ -88,6 +88,7 @@ export function createAgent(options: AgentOptions): AgentRunner {
       return await tool.run(args, {
         session,
         runId,
+        callId: call.id,
         artifacts: options.artifacts,
         ...(options.search ? { search: options.search } : {}),
         ...(options.fetch ? { fetch: options.fetch } : {}),
@@ -100,6 +101,10 @@ export function createAgent(options: AgentOptions): AgentRunner {
   return {
     async run(command: Command, session: MeetingSession): Promise<string> {
       const runId = randomUUID();
+      // Tools for this request only: the ones a client declared with it (AG-UI frontend tools).
+      const tools = [...options.tools, ...(options.toolsFor?.(command) ?? [])];
+      const byName = new Map(tools.map((tool) => [tool.name, tool]));
+      const defs = tools.map(toToolDef);
       const { agentName, language, today } = session.options;
       session.publish({ type: "run_started", runId, command });
 
@@ -166,7 +171,7 @@ export function createAgent(options: AgentOptions): AgentRunner {
               name: call.name,
               args: call.arguments,
             });
-            const result = await execute(call, session, runId);
+            const result = await execute(call, session, runId, byName);
             session.publish({
               type: "tool_result",
               runId,

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { type BaseEvent, EventType, type RunAgentInput } from "@ag-ui/core";
 import type { Command } from "@open-meetings/core";
+import type { Tool, ToolResult } from "@open-meetings/tools";
 import type { ManagerEvent, MeetingManager } from "./manager";
 
 /**
@@ -36,6 +37,44 @@ function lastUserText(input: RunAgentInput): string | undefined {
 
 /** Approval id -> agent run waiting on it, so a resume knows what to follow. */
 const waitingRuns = new Map<string, { meetingId: string; runId: string }>();
+
+/** Frontend tool calls waiting for the client to send their result in a later run. */
+const clientCalls = new Map<string, { runId: string; resolve: (result: ToolResult) => void }>();
+
+const CLIENT_TOOL_TIMEOUT_MS = 5 * 60_000;
+
+/**
+ * Tools the AG-UI client declared with its request. The agent calls them like any other tool;
+ * the run then ends with `pendingToolCallIds`, the client runs the tool and starts a new run
+ * whose last message is the tool result, and the agent carries on from there.
+ */
+function frontendTools(declared: RunAgentInput["tools"]): Tool[] {
+  return declared.map((tool) => ({
+    name: tool.name,
+    description: tool.description,
+    parameters: (tool.parameters as Record<string, unknown> | undefined) ?? {
+      type: "object",
+      properties: {},
+    },
+    parse: (args) => args ?? {},
+    external: false,
+    summarize: () => tool.name,
+    run: (_args, context) =>
+      new Promise<ToolResult>((resolve) => {
+        const timer = setTimeout(() => {
+          clientCalls.delete(context.callId);
+          resolve({ content: "The client did not run this tool in time.", isError: true });
+        }, CLIENT_TOOL_TIMEOUT_MS);
+        clientCalls.set(context.callId, {
+          runId: context.runId,
+          resolve: (result) => {
+            clearTimeout(timer);
+            resolve(result);
+          },
+        });
+      }),
+  }));
+}
 
 export async function handleAguiRun(manager: MeetingManager, run: AguiRun): Promise<void> {
   const { input, emit } = run;
@@ -85,6 +124,17 @@ export async function handleAguiRun(manager: MeetingManager, run: AguiRun): Prom
     return;
   }
 
+  // A frontend tool's result: hand it to the waiting agent run and stream the rest of it.
+  const last = input.messages.at(-1);
+  if (last?.role === "tool" && clientCalls.has(last.toolCallId)) {
+    const call = clientCalls.get(last.toolCallId);
+    clientCalls.delete(last.toolCallId);
+    const content = typeof last.content === "string" ? last.content : JSON.stringify(last.content);
+    call?.resolve({ content: last.error ?? content, ...(last.error ? { isError: true } : {}) });
+    await streamCommand(manager, meetingId, run, { followRunId: call?.runId });
+    return;
+  }
+
   const text = lastUserText(input);
   if (text && live) {
     await streamCommand(manager, meetingId, run, { text });
@@ -114,6 +164,7 @@ async function streamCommand(
   let agentRunId = target.followRunId;
   let messageId: string | undefined;
   let finished = false;
+  const clientToolNames = new Set(input.tools.map((tool) => tool.name));
 
   await new Promise<void>((resolve) => {
     const finish = (outcome?: Record<string, unknown>) => {
@@ -150,6 +201,10 @@ async function streamCommand(
         });
         emit({ type: EventType.TOOL_CALL_ARGS, toolCallId: event.callId, delta: event.args });
         emit({ type: EventType.TOOL_CALL_END, toolCallId: event.callId });
+        // The client runs its own tools: this run ends here and the next one brings the result.
+        if (clientToolNames.has(event.name)) {
+          finish({ type: "success", pendingToolCallIds: [event.callId] });
+        }
       } else if (event.type === "tool_result" && ours) {
         emit({
           type: EventType.TOOL_CALL_RESULT,
@@ -199,8 +254,13 @@ async function streamCommand(
     });
 
     if (target.text) {
+      const tools = frontendTools(input.tools);
       manager
-        .command(meetingId, target.text, { from: "panel", commandId })
+        .command(meetingId, target.text, {
+          from: "panel",
+          commandId,
+          ...(tools.length ? { tools } : {}),
+        })
         .catch((error: unknown) => {
           emit({ type: EventType.RUN_ERROR, message: (error as Error).message });
           finished = true;

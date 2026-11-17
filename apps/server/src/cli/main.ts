@@ -20,12 +20,14 @@ Usage: ${CLI_NAME} <command> [options]
 Commands:
   serve               Start the server and the web panel
   join <link>         Send the bot to a meeting (needs a running server)
+  acp                 Run as an ACP agent over stdio (for OpenBot, Zed...; needs a running server)
   doctor              Validate the config, test every engine, measure latency, estimate cost
   replay <fixture>    Run a recorded meeting through the pipeline and print the notes
 
 Options:
   -c, --config <path>   Config file (default: ./openmeetings.config.yaml or $OM_CONFIG)
-      --server <url>    join: server address (default: from the config)
+      --server <url>    join, acp: server address (default: $OM_SERVER_URL or the config)
+      --token <token>   join, acp: server token (default: $OM_AUTH_TOKEN or the config)
       --title <text>    join: meeting title
       --json            Machine-readable output
       --offline         doctor: skip the engine connection tests
@@ -90,14 +92,29 @@ storage: { driver: sqlite, path: ./data/demo.db }`,
   return 0;
 }
 
+/**
+ * Where a running server is. From --server / OM_SERVER_URL, else from the config; with no config
+ * file at all (an ACP client may start `om acp` in any folder), the default local address.
+ */
+function serverAddress(options: { config?: string; server?: string; token?: string }) {
+  let base = options.server ?? process.env.OM_SERVER_URL;
+  let token = options.token ?? process.env.OM_AUTH_TOKEN;
+  try {
+    const { config } = loadConfig(options.config ? { path: options.config } : {});
+    const host = config.server.host === "0.0.0.0" ? "127.0.0.1" : config.server.host;
+    base ??= `http://${host}:${config.server.port}`;
+    token ??= config.server.authToken;
+  } catch (error) {
+    if (options.config) throw error;
+  }
+  return { base: base ?? "http://127.0.0.1:4319", ...(token ? { token } : {}) };
+}
+
 async function join(
   link: string,
   options: { config?: string; server?: string; title?: string },
 ): Promise<number> {
-  const { config } = loadConfig(options.config ? { path: options.config } : {});
-  const host = config.server.host === "0.0.0.0" ? "127.0.0.1" : config.server.host;
-  const base = options.server ?? `http://${host}:${config.server.port}`;
-  const token = config.server.authToken;
+  const { base, token } = serverAddress(options);
   const res = await fetch(`${base}/api/meetings`, {
     method: "POST",
     headers: {
@@ -126,6 +143,7 @@ async function main(argv: string[]): Promise<number> {
     options: {
       config: { type: "string", short: "c" },
       server: { type: "string" },
+      token: { type: "string" },
       title: { type: "string" },
       json: { type: "boolean", default: false },
       offline: { type: "boolean", default: false },
@@ -154,6 +172,17 @@ async function main(argv: string[]): Promise<number> {
         ...(values.demo ? { demo: values.demo } : {}),
         ...(values.speed ? { speed: Number(values.speed) } : {}),
       });
+    case "acp": {
+      // stdout carries the protocol: nothing else may be printed there.
+      const { createAcpAgent } = await import("../acp-agent");
+      const { base, token } = serverAddress({
+        ...(values.config ? { config: values.config } : {}),
+        ...(values.server ? { server: values.server } : {}),
+        ...(values.token ? { token: values.token } : {}),
+      });
+      await createAcpAgent({ server: base, ...(token ? { token } : {}) }).connect();
+      return 0;
+    }
     case "join":
       if (!argument) {
         console.error(`Usage: ${CLI_NAME} join <meeting link>`);
