@@ -1,7 +1,7 @@
 # Server: API, AG-UI, OpenAI-compatible and MCP endpoints, and the built panel.
 # docker build -f docker/server.Dockerfile -t open-meetings-server .
 
-FROM node:22-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 WORKDIR /src
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -21,7 +21,7 @@ RUN pnpm --filter @open-meetings/web build && pnpm --filter open-meetings build
 RUN mkdir -p /out && cp -r apps/server/dist /out/dist \
   && node docker/prune-package.mjs apps/server/package.json /out/package.json
 
-FROM node:22-bookworm-slim
+FROM node:26-bookworm-slim
 # ffmpeg decodes uploaded recordings.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ffmpeg ca-certificates \

@@ -1,7 +1,7 @@
 # Bot worker: Playwright + Chromium. Connects to the server over WebSocket.
 # docker build -f docker/bot.Dockerfile -t open-meetings-bot .
 
-FROM node:22-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 WORKDIR /src
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
