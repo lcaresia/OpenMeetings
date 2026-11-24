@@ -171,17 +171,17 @@ importers:
   apps/server:
     dependencies:
       '@ag-ui/core':
-        specifier: 1.0.4
-        version: 1.0.4(zod@4.6.7)
+        specifier: 1.0.5
+        version: 1.0.5(zod@4.6.7)
       '@ag-ui/encoder':
-        specifier: 1.0.4
-        version: 1.0.4(zod@4.6.7)
+        specifier: 1.0.5
+        version: 1.0.5(zod@4.6.7)
       '@agentclientprotocol/sdk':
-        specifier: 2.7.0
-        version: 2.7.0(zod@4.6.7)
+        specifier: 2.8.0
+        version: 2.8.0(zod@4.6.7)
       '@anthropic-ai/sdk':
-        specifier: ^1.9.0
-        version: 1.9.0(zod@4.6.7)
+        specifier: ^1.12.0
+        version: 1.12.0(zod@4.6.7)
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.0
         version: 1.32.2(zod@4.6.7)
@@ -202,8 +202,8 @@ importers:
         version: 4.6.7
     devDependencies:
       '@ag-ui/client':
-        specifier: 1.0.4
-        version: 1.0.4(zod@4.6.7)
+        specifier: 1.0.5
+        version: 1.0.5(zod@4.6.7)
       '@open-meetings/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -223,8 +223,8 @@ importers:
         specifier: ^8.18.2
         version: 8.18.2
       openai:
-        specifier: 7.57.0
-        version: 7.57.0(ws@8.23.0)(zod@4.6.7)
+        specifier: 7.62.0
+        version: 7.62.0(ws@8.23.0)(zod@4.6.7)
       tsup:
         specifier: ^8.5.0
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.33)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1)
@@ -235,8 +235,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       marked:
-        specifier: ^18.2.0
-        version: 18.2.0
+        specifier: ^18.2.1
+        version: 18.2.1
       react:
         specifier: ^19.3.0
         version: 19.3.1
@@ -293,8 +293,8 @@ importers:
   packages/engines:
     dependencies:
       '@anthropic-ai/sdk':
-        specifier: ^1.9.0
-        version: 1.9.0(zod@4.6.7)
+        specifier: ^1.12.0
+        version: 1.12.0(zod@4.6.7)
       '@open-meetings/config':
         specifier: workspace:*
         version: link:../config
@@ -308,8 +308,8 @@ importers:
   packages/tools:
     dependencies:
       '@agentclientprotocol/sdk':
-        specifier: 2.7.0
-        version: 2.7.0(zod@4.6.7)
+        specifier: 2.8.0
+        version: 2.8.0(zod@4.6.7)
       '@modelcontextprotocol/sdk':
         specifier: ^1.32.0
         version: 1.32.2(zod@4.6.7)
@@ -329,31 +329,31 @@ importers:
 
 packages:
 
-  '@ag-ui/client@1.0.4':
-    resolution: {integrity: sha512-bACZj5CG/B6coQL54/LT0b29RjoyZf7k+XTs1c4+PBpsZbCYCNQ/TVDE5ffvmZvZ4NnH2Zc+JjbIeGdNdYJu8w==}
+  '@ag-ui/client@1.0.5':
+    resolution: {integrity: sha512-p+j69TEs9vN8JHlBEQYVNgHuTnWYCWRGWpSxk6cuamQ3POdhp3Nf0pf6cTit1P827rOf22ypdbR+M5pbvqlD9A==}
     peerDependencies:
       zod: ^3.25.18 || ^4.0.0
 
-  '@ag-ui/core@1.0.4':
-    resolution: {integrity: sha512-Z/G3UXYRyZ/1LcOtCCf6RJiFPTjRqaNublW/kQ7wsfiP4Qw5oIVmvO6NkUQYoqCoMXuXggyD3MMH2Td5OVKECQ==}
+  '@ag-ui/core@1.0.5':
+    resolution: {integrity: sha512-W7xg7E/bVco3svYxZCp3CMqJ6/fB15U7yAaMS3mhLCwwlJXFzZJ/bGwMqnNrx6Afmj1WmnjFKzliYds+KFXMMQ==}
     peerDependencies:
       zod: ^3.25.18 || ^4.0.0
     peerDependenciesMeta:
       zod:
         optional: true
 
-  '@ag-ui/encoder@1.0.4':
-    resolution: {integrity: sha512-fq5kqj+kCFtpLhBhfLjv55DRTKdbduFg6Wcsw4VL3uCABSQhH+PLC36vMjbjZdDp9q+mgVrGhRvaW+JdkdfVog==}
+  '@ag-ui/encoder@1.0.5':
+    resolution: {integrity: sha512-SKg5jOF2FCVMcl1nSNlk4hZdX9jV5Jg2nce5+jxY7lLSsMkBNMXvEpxZdQ1oWef3YI8OJCyB3cADUI3eyzplhA==}
     peerDependencies:
       zod: ^3.25.18 || ^4.0.0
 
-  '@ag-ui/proto@1.0.4':
-    resolution: {integrity: sha512-+OAa2w1ELijSwNgNGvMDCIx5rFO+1NQDpwzoq1oXwE4L0qWciZnhIisocVzAKjtH7Ac/ONSyYR1t4qG3kMzRkw==}
+  '@ag-ui/proto@1.0.5':
+    resolution: {integrity: sha512-HFtYEapXepL3VtCkN2YS1KO5wndjJ8+86d3Qag3EeGp1EKxljZW/hRWN3HiILUTVI5cJ3CqGXBycE1/IAKQsGA==}
     peerDependencies:
       zod: ^3.25.18 || ^4.0.0
 
-  '@agentclientprotocol/sdk@2.7.0':
-    resolution: {integrity: sha512-oXdQq0plWv3iOg01zJghNZRSuyWeMYxOgWIaSdwg1BZe2ZAC9LRhNDi023lNYxXq1zVIpQjIp8P6AfsxpvxF6g==}
+  '@agentclientprotocol/sdk@2.8.0':
+    resolution: {integrity: sha512-EjsvoRX8nEH2z3PAVI2ILsVXAefVcSlLPeXGjlQoFgkJE71F2J0Fj7N6oL/k7SnP0vY+9hmONPFz/K2zalnTiw==}
     peerDependencies:
       '@modelcontextprotocol/server': ^2.4.0
       zod: ^3.25.76 || ^4.0.0
@@ -361,8 +361,8 @@ packages:
       '@modelcontextprotocol/server':
         optional: true
 
-  '@anthropic-ai/sdk@1.9.0':
-    resolution: {integrity: sha512-xDu4za3B+rK+5ZI8wLLoosiIuwi1ktZk/3L3KKNahwO50O34H+622hly8JdXzaEerLQDhsqwVzp81Nrw80BYHg==}
+  '@anthropic-ai/sdk@1.12.0':
+    resolution: {integrity: sha512-0j9zwiQdkvr90LoiiBDUh7kae1lsNW2EqeE0vGceYne4BrmMDdDVoQ4KGOieUee0zWZbVJKsf/06JY8U5i63Xg==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
@@ -1650,8 +1650,8 @@ packages:
   magic-string@1.4.5:
     resolution: {integrity: sha512-oLLC2+YvQUfAa+vxoufE/yc1icb87M9iXIRqAoR/2EhE/8cb3SF/+Gi0c2By1B+5Vz2e2vQtUvHiu1+63Znh+w==}
 
-  marked@18.2.0:
-    resolution: {integrity: sha512-KaeL+tAbtvI930q7HE2PN5lYXYdT8EiSmxHlN6F3rsfb57wd5mp5W5TLazpdj4inTQBJdgjYwbs40W/0VUGU+Q==}
+  marked@18.2.1:
+    resolution: {integrity: sha512-ii4bxCTCqqwpT86XZWgJNs+ZnAIZksmLGYMViWA7PDIXYIeNo1x6cDdX3JOip9NM/cI6p8z57FxliACboTruMA==}
     engines: {node: '>= 20'}
     hasBin: true
 
@@ -1716,8 +1716,8 @@ packages:
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
-  openai@7.57.0:
-    resolution: {integrity: sha512-RbmrdE5NdfW6nGq/FaCJ3KFCZpotoExPzruQUSMCTw/ouUFO08vpvVdSmgmPxQMFAiv9EXZCEXvcWYU+n6NzsQ==}
+  openai@7.62.0:
+    resolution: {integrity: sha512-dehzgY2anBfU3H+FfWHCVjhb9ZRYzahzNpvmMExTmMaeU11i51NJIMJPDctgLiP4+pCh53KIsLVQ66ucKyDNMA==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
@@ -2192,11 +2192,11 @@ packages:
 
 snapshots:
 
-  '@ag-ui/client@1.0.4(zod@4.6.7)':
+  '@ag-ui/client@1.0.5(zod@4.6.7)':
     dependencies:
-      '@ag-ui/core': 1.0.4(zod@4.6.7)
-      '@ag-ui/encoder': 1.0.4(zod@4.6.7)
-      '@ag-ui/proto': 1.0.4(zod@4.6.7)
+      '@ag-ui/core': 1.0.5(zod@4.6.7)
+      '@ag-ui/encoder': 1.0.5(zod@4.6.7)
+      '@ag-ui/proto': 1.0.5(zod@4.6.7)
       '@types/uuid': 10.0.0
       compare-versions: 6.1.1
       fast-json-patch: 3.1.1
@@ -2205,28 +2205,28 @@ snapshots:
       uuid: 11.1.1
       zod: 4.6.7
 
-  '@ag-ui/core@1.0.4(zod@4.6.7)':
+  '@ag-ui/core@1.0.5(zod@4.6.7)':
     optionalDependencies:
       zod: 4.6.7
 
-  '@ag-ui/encoder@1.0.4(zod@4.6.7)':
+  '@ag-ui/encoder@1.0.5(zod@4.6.7)':
     dependencies:
-      '@ag-ui/core': 1.0.4(zod@4.6.7)
-      '@ag-ui/proto': 1.0.4(zod@4.6.7)
+      '@ag-ui/core': 1.0.5(zod@4.6.7)
+      '@ag-ui/proto': 1.0.5(zod@4.6.7)
       zod: 4.6.7
 
-  '@ag-ui/proto@1.0.4(zod@4.6.7)':
+  '@ag-ui/proto@1.0.5(zod@4.6.7)':
     dependencies:
-      '@ag-ui/core': 1.0.4(zod@4.6.7)
+      '@ag-ui/core': 1.0.5(zod@4.6.7)
       '@bufbuild/protobuf': 2.17.0
       '@protobuf-ts/protoc': 2.11.1
       zod: 4.6.7
 
-  '@agentclientprotocol/sdk@2.7.0(zod@4.6.7)':
+  '@agentclientprotocol/sdk@2.8.0(zod@4.6.7)':
     dependencies:
       zod: 4.6.7
 
-  '@anthropic-ai/sdk@1.9.0(zod@4.6.7)':
+  '@anthropic-ai/sdk@1.12.0(zod@4.6.7)':
     dependencies:
       '@opentelemetry/api': 1.10.0
       json-schema-to-ts: 3.1.1
@@ -3207,7 +3207,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  marked@18.2.0: {}
+  marked@18.2.1: {}
 
   math-intrinsics@1.1.0: {}
 
@@ -3258,7 +3258,7 @@ snapshots:
     dependencies:
       wrappy: 1.0.2
 
-  openai@7.57.0(ws@8.23.0)(zod@4.6.7):
+  openai@7.62.0(ws@8.23.0)(zod@4.6.7):
     optionalDependencies:
       ws: 8.23.0
       zod: 4.6.7
